@@ -9,7 +9,6 @@ export default function ProductPage({ params }) {
     // CAN Bus ECU - CAN EVB products
     'cs8959': {
       title: 'CS8959 EVB',
-      image: '/public/CS8959-EVB.jpg',
       description: 'The CS8959 EVB is an evaluation board specifically designed for automotive electronics applications featuring CAN 2.0 Bus technology. It functions as an in-vehicle serial communication network controller, enabling effective distributed control and real-time monitoring.',
       features: [
         'MCU: MysonCentury CS8959',
