@@ -6,233 +6,321 @@ import { useRouter } from 'next/navigation';
 import apiClient from '../../services/api';
 
 export default function CustomerDashboard() {
-    const { user, logout } = useAuth();
-    const router = useRouter();
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('');
-    const [categories, setCategories] = useState([]);
+  const { user, logout } = useAuth();
+  const router = useRouter();
 
-    useEffect(() => {
-        if (!user || user.role !== 'customer') {
-            router.push('/login');
-            return;
-        }
-        fetchProducts();
-    }, [user, router]);
+  const [firmwareList, setFirmwareList] = useState([]);
+  const [selectedFirmware, setSelectedFirmware] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
+  const [showFirmwareModal, setShowFirmwareModal] = useState(false);
 
-    const fetchProducts = async () => {
-        try {
-            const response = await apiClient.get('/accounts/products/');
-            const productData = response.data.results || response.data;
-            setProducts(productData);
-
-            // Extract unique categories
-            const uniqueCategories = [...new Set(productData.map(product => product.category))];
-            setCategories(uniqueCategories);
-        } catch (error) {
-            console.error('Error fetching products:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const filteredProducts = products.filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            product.description.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = !categoryFilter || product.category === categoryFilter;
-        const isActive = product.is_active; // Only show active products to customers
-
-        return matchesSearch && matchesCategory && isActive;
-    });
-
-    const downloadProductData = () => {
-        const csvContent = "data:text/csv;charset=utf-8," +
-            "Name,Description,Category,Price,Stock,SKU\n" +
-            filteredProducts.map(product =>
-                `"${product.name}","${product.description}","${product.category}",${product.price},${product.stock_quantity},"${product.sku}"`
-            ).join("\n");
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "products.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading products...</p>
-                </div>
-            </div>
-        );
+  useEffect(() => {
+    if (!user || user.role !== 'customer') {
+      router.push('/login/customer');
+      return;
     }
+    fetchAllowedFirmware();
+  }, [user, router]);
 
+  // Fetch firmware that customer is allowed to access
+  const fetchAllowedFirmware = async () => {
+    setLoading(true);
+    try {
+      const response = await apiClient.get('/api/customer/firmware/allowed');
+      setFirmwareList(response.data || []);
+    } catch (error) {
+      console.error('Error fetching firmware:', error);
+      setFirmwareList([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle firmware selection
+  const handleFirmwareSelect = (firmware) => {
+    setSelectedFirmware(firmware);
+    setShowFirmwareModal(true);
+  };
+
+  // Handle firmware download
+  const handleDownload = async (firmwareId) => {
+    setDownloading(true);
+    try {
+      const response = await apiClient.get(`/api/customer/firmware/download/${firmwareId}`, {
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Get filename from response headers or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'firmware.bin';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        if (filenameMatch.length === 2) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      // Log download activity
+      await apiClient.post('/api/customer/firmware/download-log', {
+        firmware_id: firmwareId,
+        downloaded_at: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Download failed. Please try again.');
+    } finally {
+      setDownloading(false);
+      setShowFirmwareModal(false);
+    }
+  };
+
+  // Handle PGN/SPN request
+  const handlePGNRequest = async (requestData) => {
+    try {
+      await apiClient.post('/api/customer/pgn-requests', requestData);
+      alert('PGN/SPN request submitted successfully!');
+    } catch (error) {
+      console.error('Request submission failed:', error);
+      alert('Failed to submit request. Please try again.');
+    }
+  };
+
+  if (loading) {
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-4">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Customer Dashboard</h1>
-                            <p className="text-gray-600">Welcome, {user?.first_name || user?.username}</p>
-                        </div>
-                        <button
-                            onClick={logout}
-                            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-                        >
-                            Logout
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Search and Filters */}
-                <div className="bg-white rounded-lg shadow-sm mb-6 p-6">
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                        <div className="flex flex-col sm:flex-row gap-4 flex-1">
-                            <div className="flex-1">
-                                <input
-                                    type="text"
-                                    placeholder="Search products..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <select
-                                    value={categoryFilter}
-                                    onChange={(e) => setCategoryFilter(e.target.value)}
-                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="">All Categories</option>
-                                    {categories.map(category => (
-                                        <option key={category} value={category}>
-                                            {category}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                        <button
-                            onClick={downloadProductData}
-                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Download CSV
-                        </button>
-                    </div>
-                </div>
-
-                {/* Products Grid */}
-                <div className="bg-white rounded-lg shadow-sm">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-xl font-semibold text-gray-900">
-                            Available Products ({filteredProducts.length})
-                        </h2>
-                        <p className="text-sm text-gray-600 mt-1">View and download product information</p>
-                    </div>
-
-                    {filteredProducts.length === 0 ? (
-                        <div className="text-center py-12">
-                            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2m16-7V9a2 2 0 00-2-2H6a2 2 0 00-2 2v4m16 0H4" />
-                            </svg>
-                            <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
-                            <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filters.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-                            {filteredProducts.map((product) => (
-                                <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <h3 className="text-lg font-semibold text-gray-900 truncate">
-                                            {product.name}
-                                        </h3>
-                                        <span className="text-lg font-bold text-green-600">
-                                            ${product.price}
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-2 text-sm text-gray-600">
-                                        <p className="line-clamp-2">
-                                            {product.description || 'No description available'}
-                                        </p>
-
-                                        <div className="flex justify-between">
-                                            <span className="font-medium">Category:</span>
-                                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                                                {product.category}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex justify-between">
-                                            <span className="font-medium">Stock:</span>
-                                            <span className={`px-2 py-1 rounded text-xs ${product.stock_quantity > 0
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-red-100 text-red-800'
-                                                }`}>
-                                                {product.stock_quantity} units
-                                            </span>
-                                        </div>
-
-                                        <div className="flex justify-between">
-                                            <span className="font-medium">SKU:</span>
-                                            <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-                                                {product.sku}
-                                            </span>
-                                        </div>
-
-                                        {product.created_by_name && (
-                                            <div className="flex justify-between">
-                                                <span className="font-medium">Added by:</span>
-                                                <span className="text-xs">
-                                                    {product.created_by_name}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="mt-4 pt-3 border-t border-gray-200">
-                                        <div className="text-xs text-gray-500">
-                                            Created: {new Date(product.created_at).toLocaleDateString()}
-                                        </div>
-                                        {product.updated_at !== product.created_at && (
-                                            <div className="text-xs text-gray-500">
-                                                Updated: {new Date(product.updated_at).toLocaleDateString()}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Info Footer */}
-            <div className="bg-blue-50 border-t border-blue-200 mt-8">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex items-center justify-center text-sm text-blue-700">
-                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                        You have view-only access to product information. Use the download button to export data.
-                    </div>
-                </div>
-            </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
         </div>
+      </div>
     );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Customer Dashboard</h1>
+            <p className="text-gray-600">Welcome, {user?.first_name || user?.username}</p>
+          </div>
+          <button
+            onClick={logout}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
+
+      {/* Main Dashboard */}
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* Account Summary */}
+        <section className="bg-white shadow-sm rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Account Summary</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <p className="font-medium text-gray-700">Name</p>
+              <p className="text-gray-900">{user?.first_name} {user?.last_name}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-700">Email</p>
+              <p className="text-gray-900">{user?.email}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-700">Company</p>
+              <p className="text-gray-900">{user?.company_name || 'N/A'}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Allowed Firmware Section */}
+        <section className="bg-white shadow-sm rounded-lg p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-xl font-semibold">Allowed Firmware</h2>
+              <p className="text-gray-600 mt-1">Firmware files you have permission to download</p>
+            </div>
+            <button
+              onClick={fetchAllowedFirmware}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200"
+            >
+              Refresh
+            </button>
+          </div>
+
+          {firmwareList.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No firmware available for your account.</p>
+              <p className="text-sm text-gray-500 mt-2">Contact your administrator for access.</p>
+            </div>
+          ) : (
+            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+              <table className="min-w-full divide-y divide-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Data Source
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Version
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Added By
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {firmwareList.map((firmware) => (
+                    <tr key={firmware.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          firmware.data_source === 'manual' 
+                            ? 'bg-blue-100 text-blue-800'
+                            : firmware.data_source === 'automatic'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {firmware.data_source}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">{firmware.description}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{firmware.version}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">Employee #{firmware.employee_id}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleFirmwareSelect(firmware)}
+                          className="text-blue-600 hover:text-blue-900 mr-4"
+                        >
+                          View Details
+                        </button>
+                        <button
+                          onClick={() => handleDownload(firmware.id)}
+                          disabled={downloading}
+                          className="text-green-600 hover:text-green-900 disabled:opacity-50"
+                        >
+                          {downloading ? 'Downloading...' : 'Download'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* PGN/SPN Request Section */}
+        <section className="bg-white shadow-sm rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">PGN/SPN Data Request</h2>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-blue-800 mb-4">
+              Need specific vehicle parameter data? Submit a request and our team will prepare it for you.
+            </p>
+            <button
+              onClick={() => router.push('/customer/pgn-request')}
+              className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-200"
+            >
+              Submit PGN/SPN Request
+            </button>
+          </div>
+        </section>
+
+        {/* Recent Activity */}
+        <section className="bg-white shadow-sm rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between py-2 border-b">
+              <div>
+                <p className="font-medium">Firmware Access</p>
+                <p className="text-sm text-gray-600">You have access to {firmwareList.length} firmware files</p>
+              </div>
+              <span className="text-sm text-gray-500">Today</span>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <p className="font-medium">Account Status</p>
+                <p className="text-sm text-gray-600">Your account is active and in good standing</p>
+              </div>
+              <span className="text-sm text-gray-500">Active</span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Firmware Details Modal */}
+      {showFirmwareModal && selectedFirmware && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold mb-4">Firmware Details</h3>
+            
+            <div className="space-y-3 mb-6">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Data Source</label>
+                <p className="text-gray-900">{selectedFirmware.data_source}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Description</label>
+                <p className="text-gray-900">{selectedFirmware.description}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Version</label>
+                <p className="text-gray-900">{selectedFirmware.version}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Added By</label>
+                <p className="text-gray-900">Employee #{selectedFirmware.employee_id}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">File Size</label>
+                <p className="text-gray-900">{selectedFirmware.file_size || 'N/A'}</p>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowFirmwareModal(false)}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDownload(selectedFirmware.id)}
+                disabled={downloading}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                {downloading ? 'Downloading...' : 'Download Firmware'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

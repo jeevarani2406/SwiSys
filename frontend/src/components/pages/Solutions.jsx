@@ -1,58 +1,295 @@
-'use client';
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Wifi, Code, Cloud, Shield, CheckCircle } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 
-export default function Solutions({ language }) {
-    return (
-        <div className="bg-white">
-            <section className="relative py-20 overflow-hidden">
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(https://images.pexels.com/photos/3862365/pexels-photo-3862365.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop)' }}>
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 to-purple-900/90"></div>
-                </div>
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white">{language === 'en' ? 'Our Solutions' : '我們的解決方案'}</h1>
-                    <p className="text-xl text-blue-100 max-w-4xl mx-auto leading-relaxed">{language === 'en' ? 'Comprehensive automotive communication solutions with flexible command collections for various applications' : '提供全面的汽車通訊解決方案，支援各式應用場景與客製化命令集'}</p>
-                </div>
-            </section>
+const Solutions = ({ language }) => {
+  const [solutionsContent, setSolutionsContent] = useState(null);
+  const [expandedSection, setExpandedSection] = useState(null); // top-level section
+  const [expandedSubSection, setExpandedSubSection] = useState(null); // sub-item
 
-            <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid lg:grid-cols-2 gap-12">
-                        {[
-                            { titleEn: 'OBD II to Bluetooth 4.x', titleZh: 'OBD II 轉藍牙 4.x', descEn: 'Wireless connectivity solution for light-duty vehicles with Bluetooth 4.x integration', descZh: '輕型車輛無線連接方案，整合藍牙 4.x', icon: Wifi, color: 'from-blue-500 to-blue-600', featuresEn: ['Real-time data streaming', 'Low power consumption', 'Mobile app integration', 'Diagnostic capabilities'], featuresZh: ['即時數據串流', '低功耗', '行動應用整合', '診斷功能'] },
-                            { titleEn: 'OBD II to UART', titleZh: 'OBD II 轉 UART', descEn: 'Serial communication interface for direct integration with microcontrollers and embedded systems', descZh: '序列通訊介面，可直接整合微控制器與嵌入式系統', icon: Code, color: 'from-green-500 to-green-600', featuresEn: ['Direct MCU integration', 'High-speed data transfer', 'Custom protocol support', 'Industrial grade reliability'], featuresZh: ['直接 MCU 整合', '高速資料傳輸', '自訂協議支援', '工業級可靠性'] },
-                            { titleEn: 'OBD II to 3G/4G', titleZh: 'OBD II 轉 3G/4G', descEn: 'Cellular connectivity for remote monitoring and cloud-based fleet management systems', descZh: '蜂巢式連接，適用於遠端監控與雲端車隊管理', icon: Cloud, color: 'from-purple-500 to-purple-600', featuresEn: ['Cloud connectivity', 'Remote monitoring', 'Fleet management', 'Global coverage'], featuresZh: ['雲端連接', '遠端監控', '車隊管理', '全球覆蓋'] },
-                            { titleEn: 'J1939 Gateway Solutions', titleZh: 'J1939 網關方案', descEn: 'Heavy-duty vehicle communication bridge for commercial and industrial applications', descZh: '重型車輛通訊橋接，適用於商用與工業應用', icon: Shield, color: 'from-orange-500 to-orange-600', featuresEn: ['Heavy-duty vehicle support', 'Industrial protocols', 'Robust design', 'Multi-protocol support'], featuresZh: ['重型車輛支援', '工業協議', '堅固設計', '多協議支援'] },
-                        ].map((solution, index) => (
-                            <div key={index} className="group bg-white p-10 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
-                                <div className={`bg-gradient-to-br ${solution.color} w-16 h-16 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                                    <solution.icon className="h-8 w-8 text-white" />
-                                </div>
-                                <h3 className="text-3xl font-bold text-gray-900 mb-6">{language === 'en' ? solution.titleEn : solution.titleZh}</h3>
-                                <p className="text-gray-600 mb-8 text-lg leading-relaxed">{language === 'en' ? solution.descEn : solution.descZh}</p>
-                                <ul className="space-y-3">
-                                    {(language === 'en' ? solution.featuresEn : solution.featuresZh).map((feature, idx) => (
-                                        <li key={idx} className="flex items-center text-gray-600">
-                                            <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                                            {feature}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const response = await import('@/content/solutions/content.json');
+        setSolutionsContent(response.default);
+      } catch (error) {
+        console.error('Error loading solutions content:', error);
+      }
+    };
+    loadContent();
 
-                    <div className="text-center mt-16 bg-gradient-to-br from-white/80 to-blue-50/80 backdrop-blur-sm p-12 rounded-3xl shadow-xl border border-white/50">
-                        <h2 className="text-4xl font-bold text-gray-900 mb-6">{language === 'en' ? 'Custom Solutions Available' : '提供客製化解決方案'}</h2>
-                        <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">{language === 'en' ? 'We provide flexible command collections and customizable solutions for HUDs, engine performance logs, vehicle diagnosis, fleet management, and air pollution monitors.' : '我們提供 HUD、引擎性能記錄、車輛診斷、車隊管理與空氣污染監測等可客製化方案。'}</p>
-                        <Link href="/contact" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-center">
-                            {language === 'en' ? 'Request Custom Solution' : '申請客製化方案'}
-                        </Link>
-                    </div>
-                </div>
-            </section>
+    // Check for stored content on mount
+    const storedContent = localStorage.getItem('solutionContent');
+    if (storedContent) {
+      try {
+        const parsedContent = JSON.parse(storedContent);
+        setSolutionsContent(prev => ({
+          ...prev,
+          current: parsedContent
+        }));
+      } catch (error) {
+        console.error('Error parsing stored content:', error);
+      }
+    }
+  }, []);
+
+  // Example content for sub-items
+  const subItemContent = {
+    'cs8959-evb': {
+      title: 'CS8959 EVB',
+      description: language === 'en'
+        ? 'The CS8959 EVB is an evaluation board specifically designed for applications in automotive electronics, including CAN 2.0 Bus technology, an in-vehicle serial communication network controller that can effectively enable distributed control and real-time monitoring.'
+        : 'CS8959 EVB 是專為汽車電子應用而設計的評估板，包括 CAN 2.0 總線技術，可有效實現分布式控制和實時監控的車載串行通信網絡控制器。',
+      overview: language === 'en'
+        ? 'The CS8959 EVB has two CAN buses that can be used for automotive body control units and gateway control units.'
+        : 'CS8959 EVB 具有兩個 CAN 總線，可用於汽車車身控制單元和網關控制單元。',
+      Productdescriptions : [ 
+        'Compatible to ISO 11898-2', 
+        'Co-Work with MysonCentury',
+        'Easy tool for developing CAN Bus application', 
+        'Rich teaching material (Manual, example codes, PPT) ' 
+      ]
+    },
+    'cs8979-evb': {
+      title: 'CS8979 EVB',
+      description: language === 'en'
+        ? 'CS8979 EVB provides robust CAN bus evaluation with enhanced EMC protection.'
+        : 'CS8979 EVB 提供強大的 CAN 總線評估功能，具有增強的 EMC 保護。',
+      features: [
+        'High Reliability',
+        'Real-time Data Logging',
+        'Temperature Range: -40°C to 125°C',
+      ]
+    }
+  };
+
+  return (
+    <div className="bg-white min-h-screen">
+      {/* Banner Section */}
+      <section className="relative py-20 overflow-hidden bg-gradient-to-br from-blue-900 to-purple-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+            {language === 'en' ? 'Our Solutions' : '我們的解決方案'}
+          </h1>
+          <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+            {language === 'en' 
+              ? 'Comprehensive automotive solutions for your specific needs'
+              : '滿足您特定需求的全面汽車解決方案'}
+          </p>
         </div>
-    );
-}
+      </section>
+
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Automotive MCU Section */}
+            <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+              <h2 className="text-2xl font-bold mb-4">
+                {language === 'en' ? 'Automotive MCU' : '汽車微控制器'}
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <div
+                    className="flex items-center cursor-pointer text-gray-600 hover:text-blue-600"
+                    onClick={() => setExpandedSection('issi-mcu')}
+                  >
+                    <span className="mr-2">
+                      {expandedSection === 'issi-mcu' ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </span>
+                    ISSI MCU
+                  </div>
+                  {expandedSection === 'issi-mcu' && (
+                    <div className="ml-6 mt-2 bg-gray-50 p-4 rounded-lg shadow-inner animate-fadeIn">
+                      <p className="text-gray-700 mb-4">High-performance automotive MCU solutions with advanced features for reliable operation.</p>
+                      <div className="mb-4">
+                        <h4 className="font-medium mb-2">Key Features:</h4>
+                        <ul className="list-disc list-inside text-gray-600 space-y-1">
+                          <li className="ml-4">32-bit ARM core architecture</li>
+                          <li className="ml-4">Wide operating voltage range</li>
+                          <li className="ml-4">Enhanced EMC protection</li>
+                        </ul>
+                      </div>
+                      <Link 
+                        href="/solutions/automotive-mcu/issi-mcu"
+                        className="group inline-flex items-center mt-2 text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        {language === 'en' ? 'View Details' : '查看詳情'}
+                        <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <div
+                    className="flex items-center cursor-pointer text-gray-600 hover:text-blue-600"
+                    onClick={() => setExpandedSection('megawin-mcu')}
+                  >
+                    <span className="mr-2">
+                      {expandedSection === 'megawin-mcu' ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </span>
+                    Megawin MCU
+                  </div>
+                  {expandedSection === 'megawin-mcu' && (
+                    <div className="ml-6 mt-2 bg-gray-50 p-4 rounded-lg shadow-inner animate-fadeIn">
+                      <p className="text-gray-700 mb-4">Advanced microcontroller solutions optimized for automotive applications and control systems.</p>
+                      <div className="mb-4">
+                        <h4 className="font-medium mb-2">Key Features:</h4>
+                        <ul className="list-disc list-inside text-gray-600 space-y-1">
+                          <li className="ml-4">High-speed processing capabilities</li>
+                          <li className="ml-4">Integrated safety features</li>
+                          <li className="ml-4">Extended temperature range</li>
+                        </ul>
+                      </div>
+                      <Link 
+                        href="/solutions/automotive-mcu/megawin-mcu"
+                        className="group inline-flex items-center mt-2 text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        {language === 'en' ? 'View Details' : '查看詳情'}
+                        <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* CAN Bus ECU Section */}
+            <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+              <h2 className="text-2xl font-bold mb-4">
+                {language === 'en' ? 'CAN Bus ECU' : 'CAN總線ECU'}
+              </h2>
+
+              {/* CAN EVB */}
+              <div>
+                <h3 className="font-semibold mb-2">
+                  {language === 'en' ? 'CAN EVB' : 'CAN評估板'}
+                </h3>
+                <ul className="space-y-2 pl-4">
+                  {['cs8959-evb', 'cs8979-evb'].map((id) => (
+                    <li key={id}>
+                      <div
+                        className="flex items-center cursor-pointer text-gray-600 hover:text-blue-600"
+                        onClick={() => setExpandedSubSection(expandedSubSection === id ? null : id)}
+                      >
+                        <span className="mr-2">
+                          {expandedSubSection === id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </span>
+                        {subItemContent[id].title}
+                      </div>
+
+                      {/* Expandable Content */}
+                      {expandedSubSection === id && (
+                        <div className="ml-6 mt-2 bg-gray-50 p-4 rounded-lg shadow-inner animate-fadeIn">
+                          <p className="text-gray-700 mb-4">{subItemContent[id].description}</p>
+                          {subItemContent[id].overview && (
+                            <p className="text-blue-700 mb-4 bg-blue-50 p-3 rounded">
+                              {subItemContent[id].overview}
+                            </p>
+                          )}
+                          <div className="mb-4">
+                            <h4 className="font-medium mb-2">Key Features:</h4>
+                            <ul className="list-disc list-inside text-gray-600 space-y-1">
+                              {subItemContent[id].features.map((feat, idx) => (
+                                <li key={idx} className="ml-4">{feat}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <Link 
+                            href={`/solutions/can-bus-ecu/can-evb/${id}`}
+                            className="group inline-flex items-center mt-2 text-blue-600 hover:text-blue-800 font-medium"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              localStorage.setItem('solutionContent', JSON.stringify(subItemContent[id]));
+                            }}
+                          >
+                            {language === 'en' ? 'View Details' : '查看詳情'}
+                            <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
+                          </Link>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Instruments Section */}
+            <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+              <h2 className="text-2xl font-bold mb-4">
+                {language === 'en' ? 'Instruments' : '儀器'}
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <div
+                    className="flex items-center cursor-pointer text-gray-600 hover:text-blue-600"
+                    onClick={() => setExpandedSection('diagnostic')}
+                  >
+                    <span className="mr-2">
+                      {expandedSection === 'diagnostic' ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </span>
+                    {language === 'en' ? 'Diagnostic Tools' : '診斷工具'}
+                  </div>
+                  {expandedSection === 'diagnostic' && (
+                    <div className="ml-6 mt-2 bg-gray-50 p-4 rounded-lg shadow-inner animate-fadeIn">
+                      <p className="text-gray-700 mb-4">Professional diagnostic tools for comprehensive vehicle analysis and troubleshooting.</p>
+                      <div className="mb-4">
+                        <h4 className="font-medium mb-2">Key Features:</h4>
+                        <ul className="list-disc list-inside text-gray-600 space-y-1">
+                          <li className="ml-4">Multi-protocol support</li>
+                          <li className="ml-4">Real-time data monitoring</li>
+                          <li className="ml-4">Advanced diagnostic capabilities</li>
+                        </ul>
+                      </div>
+                      <Link 
+                        href="/solutions/instruments/diagnostic"
+                        className="group inline-flex items-center mt-2 text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        {language === 'en' ? 'View Details' : '查看詳情'}
+                        <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <div
+                    className="flex items-center cursor-pointer text-gray-600 hover:text-blue-600"
+                    onClick={() => setExpandedSection('testing')}
+                  >
+                    <span className="mr-2">
+                      {expandedSection === 'testing' ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </span>
+                    {language === 'en' ? 'Testing Equipment' : '測試設備'}
+                  </div>
+                  {expandedSection === 'testing' && (
+                    <div className="ml-6 mt-2 bg-gray-50 p-4 rounded-lg shadow-inner animate-fadeIn">
+                      <p className="text-gray-700 mb-4">Comprehensive testing equipment for automotive system validation and quality assurance.</p>
+                      <div className="mb-4">
+                        <h4 className="font-medium mb-2">Key Features:</h4>
+                        <ul className="list-disc list-inside text-gray-600 space-y-1">
+                          <li className="ml-4">High-precision measurements</li>
+                          <li className="ml-4">Environmental testing capabilities</li>
+                          <li className="ml-4">Data logging and analysis</li>
+                        </ul>
+                      </div>
+                      <Link 
+                        href="/solutions/instruments/testing"
+                        className="group inline-flex items-center mt-2 text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        {language === 'en' ? 'View Details' : '查看詳情'}
+                        <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Solutions;

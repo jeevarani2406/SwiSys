@@ -1,4 +1,5 @@
 import React from 'react';
+import { Facebook, Twitter, Youtube } from 'lucide-react';
 
 export default function Footer({ language }) {
     return (
@@ -27,15 +28,17 @@ export default function Footer({ language }) {
                                     }
                                 }}
                             />
-                            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent" style={{ display: 'none' }}>
+                            <h3
+                                className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                                style={{ display: 'none' }}
+                            >
                                 SwiSys
                             </h3>
                         </div>
                         <p className="text-gray-300 leading-relaxed">
                             {language === 'en'
                                 ? 'Leading automotive communication solutions with CAN Bus, OBD II, and SAE J1939 expertise. Bridging vehicles with IoT innovation.'
-                                : '領先的汽車通信解決方案，擁有CAN總線、OBD II和SAE J1939專業技術。連接車輛與物聯網創新。'
-                            }
+                                : '領先的汽車通信解決方案，擁有CAN總線、OBD II和SAE J1939專業技術。連接車輛與物聯網創新。'}
                         </p>
                     </div>
 
@@ -89,7 +92,35 @@ export default function Footer({ language }) {
                     </div>
                 </div>
 
-                <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+                {/* Social Media Links Centered */}
+                <div className="flex justify-center items-center gap-4 mt-12 mb-4">
+                    <a
+                        href="https://www.facebook.com/swisys.com.tw"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-blue-600 rounded-full hover:scale-110 transition-transform duration-300"
+                    >
+                        <Facebook className="h-5 w-5 text-white" />
+                    </a>
+                    <a
+                        href="https://x.com/SwiSys_TW"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-black rounded-full hover:scale-110 transition-transform duration-300"
+                    >
+                        <Twitter className="h-5 w-5 text-white" />
+                    </a>
+                    <a
+                        href="https://www.youtube.com/channel/UCZMd6dN9HCQXlvnvi6aQdbA"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-red-600 rounded-full hover:scale-110 transition-transform duration-300"
+                    >
+                        <Youtube className="h-5 w-5 text-white" />
+                    </a>
+                </div>
+
+                <div className="border-t border-gray-800 pt-4 text-center text-gray-400">
                     <p>
                         &copy; 2025 SwiSys Co., Ltd. {language === 'en' ? 'All rights reserved.' : '版權所有。'}
                         {language === 'en' ? ' Automotive Communication Excellence.' : ' 汽車通信卓越。'}

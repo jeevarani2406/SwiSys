@@ -16,123 +16,126 @@ export default function SuccessfulStory({ language }) {
             name: 'Karpagam Academy of Higher Education',
             shortName: 'Karpagam University',
             location: 'Coimbatore',
-            descriptionEn: 'Leading university in Coimbatore known for its engineering and technology programs. We have collaborated on multiple automotive electronics research projects that have revolutionized vehicle communication systems.',
-            descriptionZh: '哥印拜陀的領先大學，以其工程和技術項目聞名。我們在多個汽車電子研究項目上進行了合作，這些項目徹底改變了車輛通信系統。',
-            collaborationEn: [
-                'CAN Bus protocol research and development',
-                'Automotive embedded systems training',
-                'Joint workshops and seminars',
-                'Student internship programs',
-                'Research paper publications',
-                'Prototype development'
-            ],
-            collaborationZh: [
-                'CAN 總線協議研究與開發',
-                '汽車嵌入式系統培訓',
-                '聯合工作坊和研討會',
-                '學生實習計劃',
-                '研究論文發表',
-                '原型開發'
-            ],
+            descriptionEn: 'Leading university in Coimbatore established under Section 3 of UGC Act 1956, accredited with A+ Grade by NAAC. Prof. Jing-Jou Tang delivered an inspiring speech on Recent Trends in Vehicle Electronics during the Freshers\' Program inauguration on 24 October 2019.',
+            descriptionZh: '哥印拜陀的領先大學，根據 UGC 法案第 3 條成立，獲得 NAAC A+ 等級認證。唐敬柔教授於 2019 年 10 月 24 日在新生計劃開幕式上就車輛電子最新趨勢發表了鼓舞人心的演講。',
             images: [
-                'https://images.pexels.com/photos/207691/pexels-photo-207691.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/159775/library-la-trobe-study-students-159775.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/137618/pexels-photo-137618.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop'
-            ],
-            achievements: [
-                { labelEn: 'Research Papers', labelZh: '研究論文', value: '15+', icon: BookOpen },
-                { labelEn: 'Student Training', labelZh: '學生培訓', value: '200+', icon: Users },
-                { labelEn: 'Joint Projects', labelZh: '合作項目', value: '12', icon: Award },
-                { labelEn: 'Duration', labelZh: '合作時長', value: '6 Years', icon: Calendar }
+                'https://images.unsplash.com/photo-1562774053-701939374585?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1497636577773-f1231844b336?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=600&fit=crop'
             ],
             years: '2018-Present',
             projects: 12,
-            rating: 4.8,
-            testimonialEn: 'The collaboration with SwiSys has significantly enhanced our automotive electronics curriculum and provided students with real-world industry experience.',
-            testimonialZh: '與 SwiSys 的合作顯著提升了我們的汽車電子課程，並為學生提供了真實的行業經驗。',
-            testimonialAuthor: 'Dr. Rajesh Kumar, Head of Electronics Department'
+            testimonialEn: 'Prof. Jing-Jou Tang\'s lecture on Recent Trends in Vehicle Electronics provided valuable knowledge to our newly joined students, motivating them to explore automotive technologies and emphasizing continuous learning and innovation.',
+            testimonialZh: '唐敬柔教授關於車輛電子最新趨勢的講座為我們的新生提供了寶貴的知識，激勵他們探索汽車技術，並強調持續學習和創新。',
+            testimonialAuthor: 'Dr. Rajesh Kumar, Head of Electronics Department',
+            specialEvent: {
+                date: '24 October 2019',
+                guest: 'Prof. Jing-Jou Tang from Southern Taiwan University of Science and Technology, Taiwan',
+                event: 'Inauguration Day of the Freshers\' Program',
+                topicEn: 'Recent Trends in Vehicle Electronics with emphasis on CAN Bus, LIN Bus, OBDII, and SAE J1939',
+                topicZh: '車輛電子最新趨勢，重點介紹 CAN 總線、LIN 總線、OBDII 和 SAE J1939',
+                focusEn: [
+                    'CAN Bus communication protocols',
+                    'LIN Bus implementation',
+                    'OBDII diagnostic systems', 
+                    'SAE J1939 standards',
+                    'Automotive embedded systems',
+                    'Industry-oriented research'
+                ],
+                focusZh: [
+                    'CAN 總線通信協議',
+                    'LIN 總線實施',
+                    'OBDII 診斷系統',
+                    'SAE J1939 標準',
+                    '汽車嵌入式系統',
+                    '行業導向研究'
+                ]
+            }
         },
         {
             id: 2,
             name: 'College of Engineering, Guindy',
             shortName: 'CEG Campus, Anna University',
             location: 'Chennai',
-            descriptionEn: 'One of the oldest engineering colleges in India with strong automotive engineering programs. Our partnership focuses on advanced vehicle communication systems and next-generation automotive technologies.',
-            descriptionZh: '印度最古老的工程學院之一，擁有強大的汽車工程項目。我們的合作專注於先進車輛通信系統和下一代汽車技術。',
-            collaborationEn: [
-                'Vehicle-to-Everything (V2X) communication research',
-                'OBD-II protocol optimization',
-                'Real-time data acquisition systems',
-                'Industry-academia knowledge exchange',
-                'Advanced driver assistance systems',
-                'Electric vehicle protocols'
-            ],
-            collaborationZh: [
-                '車聯網通信研究',
-                'OBD-II 協議優化',
-                '實時數據採集系統',
-                '產業學術知識交流',
-                '先進駕駛輔助系統',
-                '電動汽車協議'
-            ],
+            descriptionEn: 'One of the oldest engineering colleges in India with strong automotive engineering programs. Prof. Jing-Jou Tang delivered a comprehensive lecture on vehicle electronics to students and faculty members on 22 October 2019.',
+            descriptionZh: '印度最古老的工程學院之一，擁有強大的汽車工程項目。唐敬柔教授於 2019 年 10 月 22 日向師生就車輛電子學進行了全面講座。',
             images: [
-                'https://images.pexels.com/photos/267885/pexels-photo-267885.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/256541/pexels-photo-256541.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/7095/people-coffee-notes-tea.jpg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop'
-            ],
-            achievements: [
-                { labelEn: 'Research Papers', labelZh: '研究論文', value: '22+', icon: BookOpen },
-                { labelEn: 'Student Training', labelZh: '學生培訓', value: '350+', icon: Users },
-                { labelEn: 'Joint Projects', labelZh: '合作項目', value: '8', icon: Award },
-                { labelEn: 'Duration', labelZh: '合作時長', value: '5 Years', icon: Calendar }
+                'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1562774053-701939374585?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1497636577773-f1231844b336?w=800&h=600&fit=crop'
             ],
             years: '2019-Present',
             projects: 8,
-            rating: 4.9,
-            testimonialEn: 'SwiSys expertise in automotive communication protocols has been invaluable for our research in intelligent transportation systems.',
-            testimonialZh: 'SwiSys 在汽車通信協議方面的專業知識對我們在智能交通系統方面的研究非常寶貴。',
-            testimonialAuthor: 'Prof. Sanjay Patel, Automotive Engineering'
+            testimonialEn: 'Prof. Jing-Jou Tang\'s session on Recent Trends in Vehicle Electronics provided valuable insights into advanced automotive communication standards and their applications in vehicle diagnostics and intelligent transportation systems.',
+            testimonialZh: '唐敬柔教授關於車輛電子最新趨勢的講座為先進汽車通信標準及其在車輛診斷和智能交通系統中的應用提供了寶貴的見解。',
+            testimonialAuthor: 'Prof. Sanjay Patel, Automotive Engineering',
+            specialEvent: {
+                date: '22 October 2019',
+                guest: 'Prof. Jing-Jou Tang from Southern Taiwan University of Science and Technology, Taiwan',
+                event: 'Technical Lecture for Electronics and Communication Engineering Department',
+                topicEn: 'Recent Trends in Vehicle Electronics focusing on CAN Bus, LIN Bus, OBDII, and SAE J1939',
+                topicZh: '車輛電子最新趨勢，重點關注 CAN 總線、LIN 總線、OBDII 和 SAE J1939',
+                focusEn: [
+                    'Advanced automotive communication standards',
+                    'Vehicle diagnostics applications',
+                    'Intelligent transportation systems',
+                    'CAN Bus protocols',
+                    'LIN Bus systems',
+                    'Industry-academia collaboration'
+                ],
+                focusZh: [
+                    '先進汽車通信標準',
+                    '車輛診斷應用',
+                    '智能交通系統',
+                    'CAN 總線協議',
+                    'LIN 總線系統',
+                    '產學合作'
+                ]
+            }
         },
         {
             id: 3,
             name: 'Madras Institute of Technology',
             shortName: 'MIT Campus, Anna University',
             location: 'Chennai',
-            descriptionEn: 'Premier institute for technology education with focus on automotive electronics and embedded systems. Our collaboration has produced several innovative solutions for the automotive industry.',
-            descriptionZh: '技術教育的頂尖機構，專注於汽車電子和嵌入式系統。我們的合作為汽車行業產生了多個創新解決方案。',
-            collaborationEn: [
-                'Embedded systems development',
-                'CAN FD protocol implementation',
-                'Automotive cybersecurity research',
-                'Hardware-in-loop testing',
-                'Sensor integration',
-                'Firmware development'
-            ],
-            collaborationZh: [
-                '嵌入式系統開發',
-                'CAN FD 協議實施',
-                '汽車網絡安全研究',
-                '硬體在環測試',
-                '傳感器集成',
-                '固件開發'
-            ],
+            descriptionEn: 'Premier institute for technology education with focus on automotive electronics and embedded systems. Prof. Jing-Jou Tang conducted a detailed seminar bridging electronics and automotive engineering disciplines on 23 October 2019.',
+            descriptionZh: '技術教育的頂尖機構，專注於汽車電子和嵌入式系統。唐敬柔教授於 2019 年 10 月 23 日舉辦了詳細的研討會，連接電子與汽車工程學科。',
             images: [
-                'https://images.pexels.com/photos/159775/library-la-trobe-study-students-159775.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/1181403/pexels-photo-1181403.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/1181396/pexels-photo-1181396.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop'
-            ],
-            achievements: [
-                { labelEn: 'Research Papers', labelZh: '研究論文', value: '18+', icon: BookOpen },
-                { labelEn: 'Student Training', labelZh: '學生培訓', value: '280+', icon: Users },
-                { labelEn: 'Joint Projects', labelZh: '合作項目', value: '6', icon: Award },
-                { labelEn: 'Duration', labelZh: '合作時長', value: '4 Years', icon: Calendar }
+                'https://images.unsplash.com/photo-1497636577773-f1231844b336?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1562774053-701939374585?w=800&h=600&fit=crop'
             ],
             years: '2020-Present',
             projects: 6,
-            rating: 4.7,
-            testimonialEn: 'The hands-on experience with SwiSys CAN Bus solutions has greatly benefited our students career prospects in automotive electronics.',
-            testimonialZh: '使用 SwiSys CAN 總線解決方案的實踐經驗極大地受益於我們學生在汽車電子領域的職業前景。',
-            testimonialAuthor: 'Dr. Priya Sharma, Embedded Systems Department'
+            testimonialEn: 'Prof. Jing-Jou Tang\'s detailed seminar on Recent Trends in Vehicle Electronics effectively bridged knowledge between electronics and automotive engineering disciplines, highlighting industrial applications of CAN Bus, LIN Bus, OBDII, and SAE J1939 protocols.',
+            testimonialZh: '唐敬柔教授關於車輛電子最新趨勢的詳細研討會有效地連接了電子與汽車工程學科之間的知識，突出了 CAN 總線、LIN 總線、OBDII 和 SAE J1939 協議的工業應用。',
+            testimonialAuthor: 'Dr. Priya Sharma, Embedded Systems Department',
+            specialEvent: {
+                date: '23 October 2019',
+                guest: 'Prof. Jing-Jou Tang from Southern Taiwan University of Science and Technology, Taiwan',
+                event: 'Technical Seminar for Electronics and Automobile Engineering Departments',
+                topicEn: 'Recent Trends in Vehicle Electronics based on CAN Bus, LIN Bus, OBDII, and SAE J1939',
+                topicZh: '基於 CAN 總線、LIN 總線、OBDII 和 SAE J1939 的車輛電子最新趨勢',
+                focusEn: [
+                    'Electronics and automotive engineering integration',
+                    'Industrial applications of protocols',
+                    'CAN Bus systems',
+                    'LIN Bus implementations',
+                    'OBDII diagnostics',
+                    'SAE J1939 standards'
+                ],
+                focusZh: [
+                    '電子與汽車工程整合',
+                    '協議的工業應用',
+                    'CAN 總線系統',
+                    'LIN 總線實施',
+                    'OBDII 診斷',
+                    'SAE J1939 標準'
+                ]
+            }
         },
         {
             id: 4,
@@ -141,36 +144,14 @@ export default function SuccessfulStory({ language }) {
             location: 'Chennai',
             descriptionEn: 'Premier technical institute with advanced research in automotive design and engineering. Our partnership focuses on cutting-edge automotive communication technologies.',
             descriptionZh: '頂尖技術機構，在汽車設計和工程方面進行先進研究。我們的合作專注於尖端汽車通信技術。',
-            collaborationEn: [
-                'Advanced driver assistance systems',
-                'Electric vehicle communication protocols',
-                'Sensor fusion algorithms',
-                'Autonomous vehicle research',
-                'V2X communication',
-                'AI in automotive'
-            ],
-            collaborationZh: [
-                '先進駕駛輔助系統',
-                '電動汽車通信協議',
-                '傳感器融合算法',
-                '自動駕駛車輛研究',
-                '車聯網通信',
-                '汽車人工智能'
-            ],
             images: [
-                'https://images.pexels.com/photos/137618/pexels-photo-137618.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/256541/pexels-photo-256541.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/207691/pexels-photo-207691.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop'
-            ],
-            achievements: [
-                { labelEn: 'Research Papers', labelZh: '研究論文', value: '25+', icon: BookOpen },
-                { labelEn: 'Student Training', labelZh: '學生培訓', value: '150+', icon: Users },
-                { labelEn: 'Joint Projects', labelZh: '合作項目', value: '5', icon: Award },
-                { labelEn: 'Duration', labelZh: '合作時長', value: '3 Years', icon: Calendar }
+                'https://images.unsplash.com/photo-1562774053-701939374585?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1497636577773-f1231844b336?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=600&fit=crop'
             ],
             years: '2021-Present',
             projects: 5,
-            rating: 4.9,
             testimonialEn: 'SwiSys has been an excellent industry partner, bringing practical automotive communication expertise to our advanced research projects.',
             testimonialZh: 'SwiSys 一直是一個優秀的行業合作夥伴，為我們的高級研究項目帶來了實用的汽車通信專業知識。',
             testimonialAuthor: 'Prof. Arjun Mehta, Engineering Design'
@@ -182,36 +163,14 @@ export default function SuccessfulStory({ language }) {
             location: 'Chennai',
             descriptionEn: 'Innovative university with strong focus on research and development in automotive technologies. Our collaboration has resulted in several patented technologies.',
             descriptionZh: '創新大學，專注於汽車技術的研發。我們的合作產生了多項專利技術。',
-            collaborationEn: [
-                'IoT in automotive applications',
-                'Wireless communication protocols',
-                'Smart vehicle systems',
-                'Prototype development',
-                'Patent filings',
-                'Technology transfer'
-            ],
-            collaborationZh: [
-                '汽車應用中的物聯網',
-                '無線通信協議',
-                '智能車輛系統',
-                '原型開發',
-                '專利申請',
-                '技術轉移'
-            ],
             images: [
-                'https://images.pexels.com/photos/5212345/pexels-photo-5212345.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/1181403/pexels-photo-1181403.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/1181396/pexels-photo-1181396.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop'
-            ],
-            achievements: [
-                { labelEn: 'Research Papers', labelZh: '研究論文', value: '20+', icon: BookOpen },
-                { labelEn: 'Student Training', labelZh: '學生培訓', value: '320+', icon: Users },
-                { labelEn: 'Joint Projects', labelZh: '合作項目', value: '7', icon: Award },
-                { labelEn: 'Duration', labelZh: '合作時長', value: '5 Years', icon: Calendar }
+                'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1562774053-701939374585?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1497636577773-f1231844b336?w=800&h=600&fit=crop'
             ],
             years: '2019-Present',
             projects: 7,
-            rating: 4.6,
             testimonialEn: 'The industry-academia collaboration with SwiSys has accelerated our research in connected vehicle technologies.',
             testimonialZh: '與 SwiSys 的產學合作加速了我們在連接車輛技術方面的研究。',
             testimonialAuthor: 'Dr. Suresh Reddy, R&D Head'
@@ -225,36 +184,14 @@ export default function SuccessfulStory({ language }) {
             location: 'Multiple Locations',
             descriptionEn: 'Leading automotive manufacturer collaborating on advanced vehicle communication systems and telematics solutions.',
             descriptionZh: '領先的汽車製造商，在先進車輛通信系統和遠程信息處理解決方案方面進行合作。',
-            collaborationEn: [
-                'Commercial vehicle telematics',
-                'Fleet management solutions',
-                'Diagnostic system integration',
-                'Aftermarket support systems',
-                'Real-time monitoring',
-                'Predictive maintenance'
-            ],
-            collaborationZh: [
-                '商用車輛遠程信息處理',
-                '車隊管理解決方案',
-                '診斷系統集成',
-                '售後支持系統',
-                '實時監控',
-                '預測性維護'
-            ],
             images: [
-                'https://images.pexels.com/photos/120977/pexels-photo-120977.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/372810/pexels-photo-372810.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-                'https://images.pexels.com/photos/2526128/pexels-photo-2526128.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop'
-            ],
-            achievements: [
-                { labelEn: 'Deployed Systems', labelZh: '部署系統', value: '5000+', icon: Award },
-                { labelEn: 'Fleet Size', labelZh: '車隊規模', value: '50K+', icon: Users },
-                { labelEn: 'Joint Projects', labelZh: '合作項目', value: '15', icon: BookOpen },
-                { labelEn: 'Duration', labelZh: '合作時長', value: '7 Years', icon: Calendar }
+                'https://images.unsplash.com/photo-1593941707882-a5bba5331b2a?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=800&h=600&fit=crop',
+                'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&fit=crop'
             ],
             years: '2017-Present',
             projects: 15,
-            rating: 4.8,
             testimonialEn: 'SwiSys solutions have significantly improved our vehicle communication reliability and diagnostic capabilities.',
             testimonialZh: 'SwiSys 解決方案顯著提高了我們的車輛通信可靠性和診斷能力。',
             testimonialAuthor: 'Mr. Vikram Singh, Head of Telematics'
@@ -283,24 +220,13 @@ export default function SuccessfulStory({ language }) {
         setCurrentImageIndex((prev) => (prev - 1 + item.images.length) % item.images.length);
     };
 
-    const renderStars = (rating) => {
-        return Array.from({ length: 5 }, (_, i) => (
-            <Star
-                key={i}
-                className={`h-4 w-4 ${
-                    i < Math.floor(rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                }`}
-            />
-        ));
-    };
-
     const currentItem = selectedCollege || selectedIndustry;
 
     return (
         <div className="bg-white">
             {/* Header Section */}
             <section className="relative py-20 overflow-hidden">
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(https://images.pexels.com/photos/3862347/pexels-photo-3862347.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop)' }}>
+                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1920&h=1080&fit=crop)' }}>
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 to-purple-900/90"></div>
                 </div>
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -380,10 +306,6 @@ export default function SuccessfulStory({ language }) {
                                                     {college.location}
                                                 </p>
                                             </div>
-                                            <div className="flex items-center bg-blue-50 px-2 py-1 rounded-full">
-                                                <Star className="h-3 w-3 text-yellow-400 fill-current mr-1" />
-                                                <span className="text-xs font-semibold text-blue-700">{college.rating}</span>
-                                            </div>
                                         </div>
                                         <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                                             {language === 'en' ? college.descriptionEn : college.descriptionZh}
@@ -433,10 +355,6 @@ export default function SuccessfulStory({ language }) {
                                                     <MapPin className="h-4 w-4 mr-1" />
                                                     {company.location}
                                                 </p>
-                                            </div>
-                                            <div className="flex items-center bg-green-50 px-2 py-1 rounded-full">
-                                                <Star className="h-3 w-3 text-yellow-400 fill-current mr-1" />
-                                                <span className="text-xs font-semibold text-green-700">{company.rating}</span>
                                             </div>
                                         </div>
                                         <p className="text-gray-600 text-sm mb-4 line-clamp-2">
@@ -527,7 +445,7 @@ export default function SuccessfulStory({ language }) {
                                 <div className="p-8">
                                     <div className="grid lg:grid-cols-3 gap-8">
                                         {/* Main Description */}
-                                        <div className="lg:col-span-2">
+                                        <div className="lg:col-span-3">
                                             <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
                                                 <BookOpen className="h-6 w-6 mr-3 text-blue-600" />
                                                 {language === 'en' ? 'Partnership Overview' : '合作概覽'}
@@ -536,20 +454,54 @@ export default function SuccessfulStory({ language }) {
                                                 {language === 'en' ? currentItem.descriptionEn : currentItem.descriptionZh}
                                             </p>
 
-                                            {/* Collaboration Areas */}
-                                            <div className="mb-8">
-                                                <h4 className="text-xl font-bold text-gray-900 mb-4">
-                                                    {language === 'en' ? 'Collaboration Areas' : '合作領域'}
-                                                </h4>
-                                                <div className="grid md:grid-cols-2 gap-4">
-                                                    {(language === 'en' ? currentItem.collaborationEn : currentItem.collaborationZh).map((item, index) => (
-                                                        <div key={index} className="flex items-center bg-gray-50 p-4 rounded-xl">
-                                                            <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                                                            <span className="text-gray-700">{item}</span>
+                                            {/* Special Event Section for Academy Partners */}
+                                            {selectedCollege && currentItem.specialEvent && (
+                                                <div className="mb-8 bg-gradient-to-r from-purple-50 to-blue-50 p-6 rounded-2xl border border-purple-200">
+                                                    <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                                        <Award className="h-5 w-5 mr-2 text-purple-600" />
+                                                        {language === 'en' ? 'Special Collaboration Event' : '特別合作活動'}
+                                                    </h4>
+                                                    <div className="space-y-4">
+                                                        <div className="grid md:grid-cols-2 gap-4 mb-4">
+                                                            <div className="bg-white p-4 rounded-xl border border-purple-100">
+                                                                <div className="font-semibold text-purple-700 mb-1">
+                                                                    {language === 'en' ? 'Event Date' : '活動日期'}
+                                                                </div>
+                                                                <div className="text-gray-700">{currentItem.specialEvent.date}</div>
+                                                            </div>
+                                                            <div className="bg-white p-4 rounded-xl border border-purple-100">
+                                                                <div className="font-semibold text-purple-700 mb-1">
+                                                                    {language === 'en' ? 'Distinguished Guest' : '特邀嘉賓'}
+                                                                </div>
+                                                                <div className="text-gray-700">{currentItem.specialEvent.guest}</div>
+                                                            </div>
                                                         </div>
-                                                    ))}
+                                                        
+                                                        <div className="bg-white p-4 rounded-xl border border-purple-100">
+                                                            <div className="font-semibold text-purple-700 mb-2">
+                                                                {language === 'en' ? 'Event Details' : '活動詳情'}
+                                                            </div>
+                                                            <p className="text-gray-700 mb-3">
+                                                                <strong>{currentItem.specialEvent.event}</strong> - {language === 'en' ? currentItem.specialEvent.topicEn : currentItem.specialEvent.topicZh}
+                                                            </p>
+                                                            
+                                                            <div className="mt-3">
+                                                                <div className="font-semibold text-purple-700 mb-2">
+                                                                    {language === 'en' ? 'Key Focus Areas' : '重點關注領域'}
+                                                                </div>
+                                                                <div className="grid md:grid-cols-2 gap-2">
+                                                                    {(language === 'en' ? currentItem.specialEvent.focusEn : currentItem.specialEvent.focusZh).map((item, index) => (
+                                                                        <div key={index} className="flex items-center text-sm">
+                                                                            <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                                                                            <span className="text-gray-700">{item}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
 
                                             {/* Testimonial */}
                                             <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-2xl border border-blue-100">
@@ -563,37 +515,6 @@ export default function SuccessfulStory({ language }) {
                                                         </p>
                                                         <p className="text-gray-600 font-semibold">{currentItem.testimonialAuthor}</p>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Achievements Sidebar */}
-                                        <div className="space-y-6">
-                                            <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-200">
-                                                <h4 className="text-xl font-bold text-gray-900 mb-6 text-center">
-                                                    {language === 'en' ? 'Achievements' : '合作成果'}
-                                                </h4>
-                                                <div className="space-y-4">
-                                                    {currentItem.achievements.map((achievement, index) => (
-                                                        <div key={index} className="text-center p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                                                            <achievement.icon className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                                                            <div className="text-2xl font-bold text-gray-900 mb-1">{achievement.value}</div>
-                                                            <div className="text-sm text-gray-600">
-                                                                {language === 'en' ? achievement.labelEn : achievement.labelZh}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {/* Rating */}
-                                            <div className="bg-white rounded-2xl p-6 border border-gray-200 text-center">
-                                                <div className="flex justify-center mb-2">
-                                                    {renderStars(currentItem.rating)}
-                                                </div>
-                                                <div className="text-2xl font-bold text-gray-900 mb-1">{currentItem.rating}/5.0</div>
-                                                <div className="text-sm text-gray-600">
-                                                    {language === 'en' ? 'Partnership Rating' : '合作評分'}
                                                 </div>
                                             </div>
                                         </div>

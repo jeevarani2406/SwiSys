@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Car, Settings, Shield, Wifi, Target, Zap, Cloud } from "lucide-react";
 
-export default function Home({ language }) {
+export default function Products({ language }) {
     return (
         <div className="bg-white">
             {/* Hero Section */}
@@ -25,21 +25,21 @@ export default function Home({ language }) {
                             {language === "en" ? "Automotive Electronics" : "汽車電子"}
                             <span className="block bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
                                 {language === "en"
-                                    ? "Communication Solutions"
-                                    : "通信解決方案"}
+                                    ? "Products"
+                                    : "產品"}
                             </span>
                         </h1>
                         <p className="text-xl md:text-2xl mb-8 text-blue-100 max-w-4xl mx-auto leading-relaxed">
                             {language === "en"
-                                ? "Leading CAN Bus, OBD II, and SAE J1939 solutions for In-Vehicle Networking (IVN). Bridging automotive communication with IoT innovation."
-                                : "領先的 CAN 總線、OBD II 與 SAE J1939 車載網路 (IVN) 解決方案，銜接汽車通訊與物聯網創新。"}
+                                ? "Leading CAN Bus, OBD II, and SAE J1939 products for In-Vehicle Networking (IVN). Bridging automotive communication with IoT innovation."
+                                : "領先的 CAN 總線、OBD II 與 SAE J1939 車載網路 (IVN) 產品，銜接汽車通訊與物聯網創新。"}
                         </p>
                         <div className="space-x-4 flex flex-col sm:flex-row gap-4 justify-center">
                             <Link
-                                href="/solutions"
+                                href="/products"
                                 className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-center"
                             >
-                                {language === "en" ? "Explore Solutions" : "探索解決方案"}
+                                {language === "en" ? "Explore Products" : "探索產品"}
                             </Link>
                             <Link
                                 href="/contact"
@@ -81,15 +81,15 @@ export default function Home({ language }) {
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {[
+                        {[ 
                             {
                                 icon: Car,
                                 title: "CAN Bus",
                                 color: "from-blue-500 to-blue-600",
                                 descEn:
-                                    "Controller Area Network solutions with ISO 11898-2 compliance for reliable vehicle communication",
+                                    "Controller Area Network products with ISO 11898-2 compliance for reliable vehicle communication",
                                 descZh:
-                                    "符合 ISO 11898-2 標準的控制器區域網路方案，確保可靠車輛通訊",
+                                    "符合 ISO 11898-2 標準的控制器區域網路產品，確保可靠車輛通訊",
                             },
                             {
                                 icon: Settings,
@@ -97,7 +97,7 @@ export default function Home({ language }) {
                                 color: "from-green-500 to-green-600",
                                 descEn:
                                     "On-Board Diagnostics for light-duty vehicles with comprehensive data access and analysis",
-                                descZh: "輕型車輛車載診斷系統，提供全面數據存取與分析",
+                                descZh: "輕型車輛車載診斷產品，提供全面數據存取與分析",
                             },
                             {
                                 icon: Shield,
@@ -112,8 +112,8 @@ export default function Home({ language }) {
                                 title: "IVN",
                                 color: "from-orange-500 to-orange-600",
                                 descEn:
-                                    "In-Vehicle Networking solutions bridging internal systems with external IoT platforms",
-                                descZh: "車載網路方案，連結內部系統與外部物聯網平台",
+                                    "In-Vehicle Networking products bridging internal systems with external IoT platforms",
+                                descZh: "車載網路產品，連結內部系統與外部物聯網平台",
                             },
                         ].map((card, i) => (
                             <div
@@ -135,7 +135,7 @@ export default function Home({ language }) {
                 </div>
             </section>
 
-            {/* Applications */}
+            {/* Products Section */}
             <section className="py-20 relative overflow-hidden">
                 <div
                     className="absolute inset-0 bg-cover bg-center"
@@ -150,17 +150,17 @@ export default function Home({ language }) {
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                            {language === "en" ? "Applications" : "應用領域"}
+                            {language === "en" ? "Products" : "產品"}
                         </h2>
                         <p className="text-xl text-blue-100 max-w-3xl mx-auto">
                             {language === "en"
-                                ? "Versatile solutions for automotive diagnostics, fleet management, and IoT integration"
-                                : "適用於汽車診斷、車隊管理與物聯網整合的多功能解決方案"}
+                                ? "Versatile products for automotive diagnostics, fleet management, and IoT integration"
+                                : "適用於汽車診斷、車隊管理與物聯網整合的多功能產品"}
                         </p>
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {[
+                        {[ 
                             {
                                 icon: Car,
                                 titleEn: "Fleet Management",
@@ -174,8 +174,8 @@ export default function Home({ language }) {
                                 titleEn: "Vehicle Diagnostics",
                                 titleZh: "車輛診斷",
                                 descEn:
-                                    "Comprehensive diagnostic solutions for maintenance and service applications",
-                                descZh: "完整診斷方案，適用維修與服務應用",
+                                    "Comprehensive diagnostic products for maintenance and service applications",
+                                descZh: "完整診斷產品，適用維修與服務應用",
                             },
                             {
                                 icon: Target,

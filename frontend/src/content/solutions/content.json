@@ -1,0 +1,97 @@
+{
+  "can-bus-ecu": {
+    "can-evb": {
+      "cs8959": {
+        "title": "CS8959 EVB",
+        "description": "The CS8959 EVB is an evaluation board specifically designed for applications in automotive electronics, including CAN 2.0 Bus technology."
+      },
+      "cs8979": {
+        "title": "CS8979 EVB", 
+        "description": "CS8979 EVB provides robust CAN bus evaluation with enhanced EMC protection and improved reliability for automotive applications."
+      },
+      "obd-bridge": {
+        "title": "OBD Bridge",
+        "description": "OBD Bridge is a comprehensive diagnostic tool that provides seamless connectivity between OBD-II systems and modern diagnostic equipment."
+      },
+      "OBDII Recorder": {
+        "title": "OBDII Recorder",
+        "description": "Professional CAN bus analyzer for comprehensive network analysis, debugging, and monitoring of automotive communication systems."
+      },
+      "j1939 Bridge": {
+        "title": "j1939 Bridge",
+        "description": "Professional CAN bus analyzer for comprehensive network analysis, debugging, and monitoring of automotive communication systems."
+      },
+      "j1939 Recorder": {
+        "title": "j1939 Recorder",
+        "description": "Professional CAN bus analyzer for comprehensive network analysis, debugging, and monitoring of automotive communication systems."
+      },
+      "CAN to CAN converter": {
+        "title": "CAN to CAN converter",
+        "description": "Professional CAN bus analyzer for comprehensive network analysis, debugging, and monitoring of automotive communication systems."
+      },
+      "CAN to UART converter": {
+        "title": "CAN to UART converter",
+        "description": "Professional CAN bus analyzer for comprehensive network analysis, debugging, and monitoring of automotive communication systems."
+      }
+    }
+  },
+  "automotive-mcu": {
+    "issi-mcu": {
+      "issi-mcu-32bit": {
+        "title": "ISSI 32-bit MCU",
+        "description": "High-performance 32-bit microcontroller solution optimized for automotive applications with advanced safety features."
+      }
+    },
+    "megawin-mcu": {
+      "megawin-mcu-8bit": {
+        "title": "Megawin 8-bit MCU",
+        "description": "Cost-effective 8-bit microcontroller solution designed for automotive control applications with reliable performance."
+      }
+    }
+  },
+  "instruments": {
+    "Signal Generator": {
+      "CAN Signal Generator": {
+        "title": "CAN Signal Generator",
+        "description": "Professional automotive diagnostic scanner with comprehensive vehicle coverage and advanced diagnostic capabilities."
+      },
+      "LIN Signal Generator": {
+        "title": "LIN Signal Generator",
+        "description": "Professional automotive diagnostic scanner with comprehensive vehicle coverage and advanced diagnostic capabilities."
+      },
+      "OBDII Signal Generator": {
+        "title": "OBDII Signal Generator",
+        "description": "Professional automotive diagnostic scanner with comprehensive vehicle coverage and advanced diagnostic capabilities."
+      },
+      "J1939 Signal Generator": {
+        "title": "J1939 Signal Generator",
+        "description": "Professional automotive diagnostic scanner with comprehensive vehicle coverage and advanced diagnostic capabilities."
+      }
+    },
+
+    "Logical Generator": {
+      "Logic Cube Pro": {
+        "title": "Logic cube pro",
+        "description": "Professional automotive diagnostic scanner with comprehensive vehicle coverage and advanced diagnostic capabilities."
+      },
+      "Logic cube": {
+        "title": "Logic cube",
+        "description": "Professional automotive diagnostic scanner with comprehensive vehicle coverage and advanced diagnostic capabilities."
+      },
+      "Logic Educator": {
+        "title": "Logic Educator",
+        "description": "Professional automotive diagnostic scanner with comprehensive vehicle coverage and advanced diagnostic capabilities."
+      },
+      "Logic Analyzer-F1": {
+        "title": "Logic Analyzer-F1",
+        "description": "Professional automotive diagnostic scanner with comprehensive vehicle coverage and advanced diagnostic capabilities."
+      },
+      "Bus Expert II with eMMC + SD3.0": {
+        "title": "Bus Expert II with eMMC + SD3.0",
+        "description": "Professional automotive diagnostic scanner with comprehensive vehicle coverage and advanced diagnostic capabilities."
+      }
+      }
+    }
+  }
+
+
