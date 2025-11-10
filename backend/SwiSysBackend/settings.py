@@ -18,9 +18,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, 'django-insecure-change-me'),
-    ALLOWED_HOSTS=(list, []),
     DATABASE_URL=(str, f'sqlite:///{BASE_DIR}/db.sqlite3'),
-    CORS_ALLOW_ALL_ORIGINS=(bool, False),
+    CORS_ALLOW_ALL_ORIGINS=(bool, False), 
     LOG_LEVEL=(str, 'INFO'),
 )
 
@@ -32,7 +31,7 @@ environ.Env.read_env(BASE_DIR / '.env')
 # -------------------------
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
-ALLOWED_HOSTS = env('ALLOWED_HOSTS')
+ALLOWED_HOSTS = ["*"]
 
 # -------------------------
 # APPLICATIONS
@@ -194,8 +193,7 @@ else:
 # CORS SETTINGS
 # -------------------------
 CORS_ALLOW_ALL_ORIGINS = env('CORS_ALLOW_ALL_ORIGINS')
-if not CORS_ALLOW_ALL_ORIGINS:
-    CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS', default=[])
+if not CORS_ALLOW_ALL_ORIGINS: CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS', default=[])
 
 # -------------------------
 # API DOCUMENTATION

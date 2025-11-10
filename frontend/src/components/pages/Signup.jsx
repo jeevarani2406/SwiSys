@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import apiClient from '../../services/api';
+import { authService } from '../../services/api';
 import Link from 'next/link';
 import { Briefcase, User } from 'lucide-react';
 
@@ -71,29 +71,41 @@ export default function Signup() {
             };
 
             if (userType === 'customer') {
-                await apiClient.post('/accounts/register/customer/', signupData);
+                await authService.registerCustomer(signupData);
                 setCustomerUsername(formData.username);
                 setShowOTPForm(true);
                 setSuccess('Registration successful! Please check your email for the OTP code.');
             } else if (userType === 'employee') {
-                await apiClient.post('/accounts/register/employee/', signupData);
+                await authService.registerEmployee(signupData);
                 setSuccess('Employee registration submitted! Please wait for admin approval before you can login.');
                 setTimeout(() => {
                     router.push('/login');
                 }, 3000);
             }
         } catch (err) {
-            if (err.response?.data?.details || err.response?.data) {
-                const details = err.response.data.details || err.response.data;
-                if (typeof details === 'object') {
-                    const errorMessages = Object.values(details).flat().join(', ');
-                    setError(errorMessages);
-                } else {
-                    setError(details);
+            const errorData = err.response?.data;
+            let errorMessage = 'Registration failed';
+            
+            if (errorData) {
+                // Handle custom exception handler format
+                if (errorData.message) {
+                    errorMessage = errorData.message;
                 }
-            } else {
-                setError(err.response?.data?.message || 'Registration failed');
+                // Handle DRF validation errors
+                else if (errorData.details && typeof errorData.details === 'object') {
+                    const messages = Object.values(errorData.details).flat();
+                    errorMessage = Array.isArray(messages) ? messages.join(', ') : String(messages);
+                }
+                // Handle field-specific errors
+                else if (typeof errorData === 'object') {
+                    const messages = Object.values(errorData).flat();
+                    errorMessage = Array.isArray(messages) ? messages.join(', ') : String(messages);
+                } else {
+                    errorMessage = String(errorData);
+                }
             }
+            
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -105,18 +117,13 @@ export default function Signup() {
         setError('');
 
         try {
-            const response = await apiClient.post('/accounts/verify/customer/otp/', {
-                username: customerUsername,
-                code: otpCode,
-            });
+            const data = await authService.verifyOTP(customerUsername, otpCode);
 
-            if (response.data.token) {
+            if (data.token) {
                 // Get user info after OTP verification
-                const userResponse = await apiClient.get('/accounts/me/', {
-                    headers: { Authorization: `Token ${response.data.token}` }
-                });
+                const userData = await authService.getCurrentUser();
 
-                login(response.data.token, userResponse.data);
+                login(data.token, userData);
                 setSuccess('Account verified successfully! Redirecting to dashboard...');
 
                 setTimeout(() => {
@@ -124,7 +131,23 @@ export default function Signup() {
                 }, 1500);
             }
         } catch (err) {
-            setError(err.response?.data?.non_field_errors?.[0] || err.response?.data?.detail || 'OTP verification failed');
+            const errorData = err.response?.data;
+            let errorMessage = 'OTP verification failed';
+            
+            if (errorData) {
+                if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
+                    errorMessage = errorData.non_field_errors[0];
+                } else if (errorData.detail) {
+                    errorMessage = errorData.detail;
+                } else if (errorData.details && typeof errorData.details === 'object') {
+                    const messages = Object.values(errorData.details).flat();
+                    errorMessage = Array.isArray(messages) ? messages[0] : String(messages);
+                }
+            }
+            
+            setError(errorMessage);
         } finally {
             setOtpLoading(false);
         }
@@ -132,13 +155,12 @@ export default function Signup() {
 
     const handleResendOTP = async () => {
         try {
-            await apiClient.post('/accounts/resend/customer/otp/', {
-                username: customerUsername,
-            });
+            await authService.resendOTP(customerUsername);
             setSuccess('OTP sent to your email!');
             setTimeout(() => setSuccess(''), 3000);
         } catch (err) {
-            setError('Failed to resend OTP');
+            const errorData = err.response?.data;
+            setError(errorData?.message || errorData?.detail || 'Failed to resend OTP');
         }
     };
 

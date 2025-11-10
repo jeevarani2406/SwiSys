@@ -39,7 +39,7 @@ export default async function ProductPage({ params }) {
     'cs8972': {
       title: 'CS8972 EVB',
       description:
-        'The CS8972 EVB is a stand-alone Controller Area Network (CAN) protocol controller with the embedded CAN transceiver...',
+        'The CS8972 EVB is a stand-alone Controller Area Network (CAN) protocol controller with the embedded CAN transceiver. The CAN transceiver meets or exceeds ISO 11898 standards. As CAN transceivers, these devices provide differential transmit and receive capability as signaling rates up to 1 Mb/s for a CAN controller. It is capable of transmitting and receiving standard and extended message frames. It includes eight independent auto-dispatch and 1024-byte transmit buffers, FIFO receives filtering with 12 ID acceptance and message management. The MCU communication is implemented via an industry standard Serial Peripheral Interface (SPI) and an I2C bus. ',
       image: '/CS8972 EVB.jpeg',
       downloads: {
         Datasheet: '/downloads/cs8972-datasheet.pdf',
@@ -51,7 +51,6 @@ export default async function ProductPage({ params }) {
       title: 'CS8961 ECU',
       description:
         'The CS8961 ECU is an evaluation board specifically designed for automotive electronics applications featuring CAN 2.0 Bus technology...',
-      image: '/cs8961 ecu.jpg',
       features: [
         'Compatible to ISO 11898-2',
         'Co-Work with MysonCentury',
@@ -74,6 +73,187 @@ export default async function ProductPage({ params }) {
           '/Downloads/SwiSys_CAN-Bus_EVB&ECU_Flyers-EN_F1611-012.pdf',
       },
     },
+    
+    'obd-bridge': {
+      title: 'OBD Bridge',
+      description:
+        'SWISYS Light Duty – OBDII Bridge, which is an In-Vehicle-Infotainment (IVI) cost competitive product. To get vehicle information on CAN Bus, there is a CAN transceiver that has CAN H and CAN L signal pins. Information about the CAN Bus will be transmitted to the MCU through the SPI interface. A Bluetooth module JDY-23 is connected to MCU using the UART interface. Depending on system integration requirements, the Bluetooth module can be removed for hard wired applications through UART interface. We also provide『OBDII Bluetooth Receiver』hardware for wireless applications.',
+      image: '/obd-bridge.jpeg',
+      features: [
+        'Supports CAN 2.0A/B & OBDII standards.',
+        'Offers UART, BT, USB, 3G/4G, LoRa, NB-IoT interfaces.',
+        'Provides standard & proprietary command sets.',
+        'Includes ESG-based fuel economy analysis.',
+        'Complies with BCI, EFT, and ESD standards.',
+      ],
+      specifications: {
+        'Operation Voltage' : 'DC 9V to 25V',
+        'Standby/ Operation Current' : '3mA / <60mA',
+        'Operation Temperature': '-20 to +70°C',
+        'Bluetooth Protocol' : '3.0 SPP + BLE',
+        'Dimensions' : '50*20*26mm',
+        'Weight' : '35g'
+
+      },
+      downloads: {
+        'SwiSys_CAN-Bus-OBDII-Bridge_Flyers-EN_F1902-017':
+          '/Downloads/SwiSys_CAN-Bus-OBDII-Bridge_Flyers-EN_F1902-017.pdf'
+      },
+    },
+    'j1939-bridge': {
+      title: 'HeavyDuty-J1939 Bridge',
+      description:
+        'SWISYS Heavy Duty – J1939 Bridge, is a high-level communications protocol, which operates on a Controller Area Network (CAN) bus, which is an In-Vehicle-Infotainment (IVI) cost competitive product. The hardware design is based on our SAE J1939 / OBD-II Device with Bluetooth to get vehicle information such as speed, engine speed, coolant temperature, IAT sensor, APP, MAP, vehicle identification code (VIN), etc. J1939 Bridge contains three parts they are off, CAN Transceiver (TJA1050), main controller (RL78 MCU), and  Bluetooth transmission module (HC-05). J1939 doubles the data transmission rate from 250 Kbit/s to 500 Kbit/s.',
+      image: '/j1939-bridge.jpg',
+      features: [
+  'Provides Basic J1939 Data: SPD, TMP, RPM, APP, Tire, Distance, Weight, Fuel Economics (Instantaneous & Average)',
+  'Multiple Command Sets: Basic, Advanced (ESG/FMS), and Customized for system integration',
+  'Easy Integration with IoT Devices: BT, USB, 3G/4G, LoRa, NB-IoT; Optional Contactless CAN Probe (CCP)',
+  'Automotive-Grade Compliance: BCI (ISO 11452-4), EFT (IEC 61000-4-4), ESD (IEC61000-4-2)',
+  'Wide Vehicle Compatibility: Supports 200+ heavy vehicle brands for ESG-based fleet management, ADAS, V2V communication, vehicle diagnosis, and IVI applications',
+],
+specifications: {
+  'Housing Dimensions': '50 x 20 x 21 mm (may vary by connector)',
+  'Applications': 'ESG Fleet Management, ADAS, Vehicle Diagnosis & Maintenance, GPS Navigation Assistance, IVI, V2V Communication',
+  'Command Set Types': 'Basic, Advanced (E/S/G), Customized',
+  'Integration Options': 'BT, USB, 3G/4G, LoRa, NB-IoT, Optional Contactless CAN Probe',
+  'Compatible Brands/Models': 'ADL, DAF, DAEWOO, FUSO, HINO, IVECO, KING LONG, SCANIA, VOLVO, YUTONG, etc.',
+},
+
+      downloads: {
+        'SwiSys_CAN-Bus-J1939-Bridge_Flyers-EN_F2107-014.pdf':
+          '/Downloads/SwiSys_CAN-Bus-J1939-Bridge_Flyers-EN_F2107-014.pdf'
+
+      },
+    },
+    'j1939-recorder': {
+      title: 'J1939 Recorder',
+      description:
+        'The product J1939-DBR has two high performance independent CAN communication channels that can be configured to store either CAN or J1939 data concurrently. The J1939 data can be accessed via actively or passive mode on any parameters specified by customers. This product is beneficial to ADAS (Advanced Driving Assistant System) or FMS (Fleet Management System) product development for heavy duty vehicles. The hardware is also applicable for the IVN(In-Vehicle-Networking) gateway design with firmware design by request.',
+      features: [
+        'Supports CAN Bus 2.0A, B (ISO 11898-2)',
+        'Supports Dual CAN Bus',
+        'Supports Record ISO 11898-2 (raw data) *1',
+        'Monitor interface: Bluetooth (Ver. 2.0 & 4.0 (Both))',
+        'Interface: J1962 port / Contactless CAN Probe *2'
+
+      ],
+      specifications: {
+        'Input Voltage' : '+12V to +30VDC', 
+        'Power Consumption' : '< 5W',
+        'Operation Temperature': '0℃ to 70℃',
+        'Dimensions': 'H35 x W73 x D125 (mm)',
+        'Weight': '400g'
+      },
+      downloads: {
+        'SwiSys_OBDII-J1939-DBR_Flyers-EN_F2104-014':
+          '/Downloads/SwiSys_OBDII-J1939-DBR_Flyers-EN_F2104-014.pdf'
+      },
+    },
+    'can-to-uart': {
+      title: 'CAN TO UART Converter',
+      description:
+        'The CAN  to UART converter is a USB-based serial TTL communication device for reading CAN messages. It accesses programmable CAN and UART baud rates. On the PCB board, there are LEDs which display TX and RX signal lines. The standard supports baud rates ranging from 10 KB/s to 1 MB/s. Read all CAN Bus signals, such as CANOpen and J1939. This system is suitable for for connecting PCs and tablets. The CAN to UART converter compatible with the ISO 11898 standard.',
+      image: '/can-uart converter.png',
+      features: [
+        'Supports both CAN 2.0A and CAN 2.0B protocols',
+        'Bridges CAN Bus and UART',
+        'Embedded with high performance CAN transceiver',
+        'Adjustable CAN Bit rates: 100kbps to 1 Mbps',
+        'Compliance with the automotive EMS test level: BCI (ISO 11452-4), EFT (IEC 61000-4-4), ESD (IEC 61000-4-2)'
+      ],
+      specifications: {
+        'Power supply' : 'DC 7V ~ 35V',
+        'Working Current' : '< 12mA (1mA @Sleep mode)',
+        'Bit Rate (CAN)' : '125K, 250K, 500K, 1Mbps',
+        'Baud Rate (UART)' : '38400, 57600, 115200,230400, 460800, 921600, 1382400 bps…',
+        'Support Protocol CAN' : '2.0A / CAN 2.0B',
+        'Dimensions' : '33.0 x 17.8 x 2.7 (mm)',
+        'Weight' : '8g',
+        'Operation Temperature' : '-25 ~ +75℃'
+      },
+      downloads: {
+        'SwiSys_CAN-UART-Converter_Flyers-EN_F1707-028':
+          '/Downloads/SwiSys_CAN-UART-Converter_Flyers-EN_F1707-028.pdf'
+      },
+    },
+    'CCP': {
+      title: 'Contactless CAN Probe (CCP)',
+      description:
+        'Contacless CAN probe device is designed for efficient CAN Bus data monitoring in applications such as transportation and industrial automation. It allows sniffing vehicle CAN bus data without directly connecting to signal wires, making installation safe and non-intrusive. The device features a patented robust encapsulation that protects it against environmental stresses including humidity, dust, temperature fluctuations, electrical interference, and shock. It is easy to install and operate, supports a single CAN Bus channel, and is fully compatible with the ISO 11898 standard (CAN 2.0A/11-bit and CAN 2.0B/29-bit). Additionally, it can be integrated with other systems like CANtoUART, OBDII bridges, and J1939 bridges for extended functionality.',
+      features: [
+        'Supports CAN Bus data monitoring for transportation and industrial automation.',
+        'Non-intrusive vehicle CAN data sniffing without connecting signal wires.',
+        'Patented encapsulation protects against humidity, dust, temperature, electricity, and shock.',
+        'Easy installation and operation with 1 CAN Bus channel support.',
+        'Compatible with ISO 11898 (CAN 2.0A/2.0B) and integrable with CANtoUART, OBDII, and J1939 bridges.'
+      ],
+      specifications: {
+        'Operating Temperature' : '-25 to 85 °C (-13 to 185 °F)',
+        'Operating humidity' : '≤ 85 % (no condensation)',
+        'Max operating current' : '≤ 8 mA (@28 V)',
+        'Operating voltage' : '+9 to +36 VDC',
+        'Dimensions' : '40 x 20 x 10 (mm)'
+      },
+      downloads: {
+        'SwiSys_CCP_Flyers-EN_F2408-012A':
+          '/Downloads/SwiSys_CCP_Flyers-EN_F2408-012A.pdf',
+      },
+    },
+    'can': {
+      title: 'CAN signal generator',
+      description:
+        'CAN Bus signal generator is originally designed for the automotive industry. It has two pin interface connectors, four adjustable knobs and two toggle switches. The TJA 1050 is the protocol interface for physical bus-to-CAN. The system gives both transmitting and receiving capability for the CAN controller. This standard specifies many different data speeds with 1 MB/s. The latest version of the serial CAN Bus protocol, has increased with the transmission speeds to 10 MB/s. To preserve signal efficiency, the bus requires 120 Ω termination resistance at each end of the unshielded twisted pair cable. CAN Bus signal generator is compatible with standard ISO 11898 and this device is suitable for connecting PCs, smart phones, and tablets.',
+      image: '/can signal generator.png',
+      features: [
+        '2 Pin CAN Bus Interface Connector',
+        '4 Adjustable Knobs',
+        '2 Toggle Switches',
+        '120Ω Terminal Resistor Switch',
+        'CAN Update Speed > 10ms',
+        'CAN Transceiver：TJA 1050',
+        'CAN Protocol：ISO 11898'
+      ],
+      specifications: {
+       'Power supply' : 'DC 5V',
+       'Working Current' : '< 50mA',
+       'Operation Temperature' : '0℃ to 70℃',
+       'Dimensions': '123 x 114 x 34 (mm)',
+       'Weight' :'221g'
+      },
+      downloads: {
+        'SwiSys_CAN-Emulator_Flyers-EN_F1710-031':
+          '/Downloads/SwiSys_CAN-Emulator_Flyers-EN_F1710-031.pdf',
+      },
+    },
+    'j1939': {
+      title: 'J1939 signal generator',
+      description:
+        'J1939 signal generator is a high-level communications protocol, which operates on a Controller Area Network (CAN) Bus. This is useful for the development of the SAE J1939 reader. It can work independently on a PC, without additional software. Eight PGN/SPN data can be manually calibrated for each potentiometer, in two sets. It defines the data priority, size, scaling, and offset. A MIL indicator is provided for displaying the DTC status, which can be triggered by a switch. The standard goes on to define many other aspects, including message timeouts, how large messages are fragmented and reassembled, the network speed, the physical layer, and how applications acquire network addresses. J1939 simulator compliant vehicle signals are suitable for connecting PCs, smart phones, and tablets.',
+      image: '/j1939 signal generator.png',
+      features: [
+        'Compatible with J1939 Standard for heavy duty vehicle',
+        'CAN 2.0B 29bit with 250kB Baud',
+        'Support J1979 complaints" DMs',
+        'Support more than 8 live data',
+        'Upgradeable firmware to simulate different PGNs',
+        'ECU source address is 0x00'
+
+      ],
+      specifications: {
+        'Power supply' : '+7VDC ~ +30VDC',
+        'Working Current' : '< 100mA',
+        'Operation Temperature' : '0℃ to 70℃',
+        'Dimensions' : '114 x 33 x 120 (mm)',
+        'Connector' : 'J1962 Female',
+        'Weight' : '350g'
+      },
+      downloads: {
+        'SwiSys_J1939-Engine-Alternator-Simulator_Flyers-EN_F2003-012':
+          '/Downloads/SwiSys_J1939-Engine-Alternator-Simulator_Flyers-EN_F2003-012.pdf',
+      },
+    },
+
 
     // (Your other products remain unchanged — OBD Bridge, J1939, CCP, CAN, etc.)
     // You don’t need to modify any of their details.

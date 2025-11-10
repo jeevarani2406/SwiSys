@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Calendar, User, Clock, Filter, Search } from 'lucide-react';
-import apiClient from '../../../services/api';
+import { adminService } from '../../../services/api';
 
 export default function LoginLogs() {
     const [logs, setLogs] = useState([]);
@@ -17,10 +17,12 @@ export default function LoginLogs() {
     const fetchLoginLogs = async () => {
         try {
             setLoading(true);
-            const response = await apiClient.get('/accounts/admin/login-logs/');
-            setLogs(response.data.results || response.data);
+            const data = await adminService.getLoginLogs();
+            setLogs(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch login logs:', error);
+            const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Failed to fetch login logs';
+            alert(errorMsg);
         } finally {
             setLoading(false);
         }

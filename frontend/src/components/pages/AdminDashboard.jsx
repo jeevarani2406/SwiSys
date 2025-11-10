@@ -13,7 +13,7 @@ import {
     LogOut
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import apiClient from '../../services/api';
+import { adminService } from '../../services/api';
 
 // Sub-components
 import DashboardStats from './admin/DashboardStats';
@@ -35,8 +35,8 @@ export default function AdminDashboard() {
 
     const fetchDashboardStats = async () => {
         try {
-            const response = await apiClient.get('/accounts/admin/dashboard-stats/');
-            setStats(response.data.stats);
+            const statsData = await adminService.getDashboardStats();
+            setStats(statsData);
         } catch (error) {
             console.error('Failed to fetch dashboard stats:', error);
         } finally {

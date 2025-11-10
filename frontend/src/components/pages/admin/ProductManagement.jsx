@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Eye, Search, Filter, DollarSign } from 'lucide-react';
-import apiClient from '../../../services/api';
+import { productService } from '../../../services/api';
 
 export default function ProductManagement() {
     const [products, setProducts] = useState([]);
@@ -30,10 +30,12 @@ export default function ProductManagement() {
     const fetchProducts = async () => {
         try {
             setLoading(true);
-            const response = await apiClient.get('/accounts/products/');
-            setProducts(response.data.results || response.data);
+            const data = await productService.getAllProducts();
+            setProducts(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch products:', error);
+            const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Failed to fetch products';
+            alert(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -42,7 +44,7 @@ export default function ProductManagement() {
     const handleAddProduct = async (e) => {
         e.preventDefault();
         try {
-            await apiClient.post('/accounts/products/', productForm);
+            await productService.createProduct(productForm);
             setShowAddModal(false);
             setProductForm({
                 name: '',
@@ -56,14 +58,15 @@ export default function ProductManagement() {
             fetchProducts();
         } catch (error) {
             console.error('Failed to add product:', error);
-            alert('Failed to add product');
+            const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Failed to add product';
+            alert(errorMsg);
         }
     };
 
     const handleEditProduct = async (e) => {
         e.preventDefault();
         try {
-            await apiClient.put(`/accounts/products/${editingProduct.id}/`, productForm);
+            await productService.updateProduct(editingProduct.id, productForm);
             setShowEditModal(false);
             setEditingProduct(null);
             setProductForm({
@@ -78,18 +81,20 @@ export default function ProductManagement() {
             fetchProducts();
         } catch (error) {
             console.error('Failed to update product:', error);
-            alert('Failed to update product');
+            const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Failed to update product';
+            alert(errorMsg);
         }
     };
 
     const handleDeleteProduct = async (productId) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
             try {
-                await apiClient.delete(`/accounts/products/${productId}/`);
+                await productService.deleteProduct(productId);
                 fetchProducts();
             } catch (error) {
                 console.error('Failed to delete product:', error);
-                alert('Failed to delete product');
+                const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Failed to delete product';
+                alert(errorMsg);
             }
         }
     };

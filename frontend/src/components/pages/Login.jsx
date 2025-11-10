@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
-import apiClient from '../../services/api';
+import { authService } from '../../services/api';
 import Link from 'next/link';
 
 export default function Login({ language = 'en' }) {
@@ -32,16 +32,13 @@ export default function Login({ language = 'en' }) {
         setError('');
 
         try {
-            const response = await apiClient.post('/accounts/login/', {
-                username: formData.username,
-                password: formData.password,
-            });
+            const data = await authService.login(formData.username, formData.password);
 
-            if (response.data.success && response.data.token) {
-                login(response.data.token, response.data.user);
+            if (data.success && data.token) {
+                login(data.token, data.user);
 
                 // Redirect based on user type from backend response
-                switch (response.data.user_type) {
+                switch (data.user_type) {
                     case 'admin':
                         router.push('/admin');
                         break;
@@ -56,10 +53,30 @@ export default function Login({ language = 'en' }) {
                 }
             }
         } catch (err) {
-            const errorMessage = err.response?.data?.non_field_errors?.[0] ||
-                err.response?.data?.message ||
-                err.response?.data?.detail ||
-                'Login failed';
+            // Handle error response - backend may return error in different formats
+            const errorData = err.response?.data;
+            let errorMessage = 'Login failed';
+            
+            if (errorData) {
+                // Handle custom exception handler format
+                if (errorData.message) {
+                    errorMessage = errorData.message;
+                }
+                // Handle DRF validation errors
+                else if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
+                    errorMessage = errorData.non_field_errors[0];
+                }
+                // Handle DRF detail format
+                else if (errorData.detail) {
+                    errorMessage = errorData.detail;
+                }
+                // Handle error details object
+                else if (errorData.details && typeof errorData.details === 'object') {
+                    const messages = Object.values(errorData.details).flat();
+                    errorMessage = Array.isArray(messages) ? messages[0] : String(messages);
+                }
+            }
+            
             setError(errorMessage);
         } finally {
             setLoading(false);

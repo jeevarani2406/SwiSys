@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Eye, Search, Mail, Calendar } from 'lucide-react';
-import apiClient from '../../../services/api';
+import { userService } from '../../../services/api';
 
 export default function CustomerManagement() {
     const [customers, setCustomers] = useState([]);
@@ -16,10 +16,12 @@ export default function CustomerManagement() {
     const fetchCustomers = async () => {
         try {
             setLoading(true);
-            const response = await apiClient.get('/accounts/admin/customers/');
-            setCustomers(response.data.results || response.data);
+            const data = await userService.getCustomers();
+            setCustomers(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch customers:', error);
+            const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Failed to fetch customers';
+            alert(errorMsg);
         } finally {
             setLoading(false);
         }

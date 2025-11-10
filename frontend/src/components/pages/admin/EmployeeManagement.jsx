@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Check, X, Eye, Search, Filter } from 'lucide-react';
-import apiClient from '../../../services/api';
+import { userService } from '../../../services/api';
 
 export default function EmployeeManagement() {
     const [employees, setEmployees] = useState([]);
@@ -18,10 +18,12 @@ export default function EmployeeManagement() {
     const fetchEmployees = async () => {
         try {
             setLoading(true);
-            const response = await apiClient.get('/accounts/admin/employees/');
-            setEmployees(response.data.results || response.data);
+            const data = await userService.getEmployees();
+            setEmployees(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch employees:', error);
+            const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Failed to fetch employees';
+            alert(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -29,14 +31,13 @@ export default function EmployeeManagement() {
 
     const handleApproveEmployee = async (employeeId, approved) => {
         try {
-            await apiClient.post(`/accounts/admin/approve-employee/${employeeId}/`, {
-                approved
-            });
+            await userService.approveUser(employeeId, approved);
             // Refresh the list
             fetchEmployees();
         } catch (error) {
             console.error('Failed to approve employee:', error);
-            alert('Failed to update employee status');
+            const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Failed to update employee status';
+            alert(errorMsg);
         }
     };
 

@@ -7,6 +7,7 @@ export default function Footer({ language }) {
     const productLinks = [
         { name: 'CS8959 EVB', nameZh: 'CS8959 評估板', href: '/solutions/can-bus-ecu/can-evb/CS8959' },
         { name: 'CS8972 EVB', nameZh: 'CS8972 評估板', href: '/solutions/can-bus-ecu/can-evb/cs8972' },
+        { name: 'CS8961 ECU', nameZh: 'CS8961 評估板', href: '/solutions/can-bus-ecu/can-evb/cs8961' },
         { name: 'OBD Bridge', nameZh: 'OBD 橋接器', href: '/solutions/can-bus-ecu/obdii/obd-bridge' },
         { name: 'OBDII Recorder', nameZh: 'OBDII 記錄器', href: '/solutions/can-bus-ecu/obdii/obdii-recorder' },
         { name: 'J1939 Bridge', nameZh: 'J1939 橋接器', href: '/solutions/can-bus-ecu/j1939/j1939-bridge' },

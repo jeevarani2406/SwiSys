@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Package, User, Clock, Eye, Search, Filter } from 'lucide-react';
-import apiClient from '../../../services/api';
+import { adminService } from '../../../services/api';
 
 export default function ProductUpdateLogs() {
     const [logs, setLogs] = useState([]);
@@ -19,10 +19,12 @@ export default function ProductUpdateLogs() {
     const fetchProductUpdateLogs = async () => {
         try {
             setLoading(true);
-            const response = await apiClient.get('/accounts/admin/product-logs/');
-            setLogs(response.data.results || response.data);
+            const data = await adminService.getProductUpdateLogs();
+            setLogs(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch product update logs:', error);
+            const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Failed to fetch product update logs';
+            alert(errorMsg);
         } finally {
             setLoading(false);
         }

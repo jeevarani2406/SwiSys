@@ -86,9 +86,10 @@ export const authUtils = {
 
 // User service for user management operations
 export const userService = {
-    getAllUsers: async () => {
-        const response = await apiClient.get('/accounts/admin/users/');
-        return response.data;
+    getAllUsers: async (params = {}) => {
+        const response = await apiClient.get('/accounts/admin/users/', { params });
+        // Handle paginated response
+        return response.data.results || response.data;
     },
 
     getUserById: async (userId) => {
@@ -96,9 +97,22 @@ export const userService = {
         return response.data;
     },
 
-    approveUser: async (userId) => {
-        const response = await apiClient.put(`/accounts/admin/users/${userId}/approve/`);
+    approveUser: async (userId, approved = true) => {
+        // Backend endpoint: POST /accounts/admin/approve-employee/<user_id>/
+        const response = await apiClient.post(`/accounts/admin/approve-employee/${userId}/`, {
+            approved
+        });
         return response.data;
+    },
+
+    getEmployees: async (params = {}) => {
+        const response = await apiClient.get('/accounts/admin/employees/', { params });
+        return response.data.results || response.data;
+    },
+
+    getCustomers: async (params = {}) => {
+        const response = await apiClient.get('/accounts/admin/customers/', { params });
+        return response.data.results || response.data;
     },
 
     updateUser: async (userId, userData) => {
@@ -108,6 +122,93 @@ export const userService = {
 
     deleteUser: async (userId) => {
         const response = await apiClient.delete(`/accounts/admin/users/${userId}/`);
+        return response.data;
+    }
+};
+
+// Product service for product management operations
+export const productService = {
+    getAllProducts: async (params = {}) => {
+        const response = await apiClient.get('/accounts/products/', { params });
+        return response.data.results || response.data;
+    },
+
+    getProductById: async (productId) => {
+        const response = await apiClient.get(`/accounts/products/${productId}/`);
+        return response.data;
+    },
+
+    createProduct: async (productData) => {
+        const response = await apiClient.post('/accounts/products/', productData);
+        return response.data;
+    },
+
+    updateProduct: async (productId, productData) => {
+        const response = await apiClient.put(`/accounts/products/${productId}/`, productData);
+        return response.data;
+    },
+
+    deleteProduct: async (productId) => {
+        const response = await apiClient.delete(`/accounts/products/${productId}/`);
+        return response.data;
+    }
+};
+
+// Admin service for admin dashboard operations
+export const adminService = {
+    getDashboardStats: async () => {
+        const response = await apiClient.get('/accounts/admin/dashboard-stats/');
+        return response.data.stats || response.data;
+    },
+
+    getLoginLogs: async (params = {}) => {
+        const response = await apiClient.get('/accounts/admin/login-logs/', { params });
+        return response.data.results || response.data;
+    },
+
+    getProductUpdateLogs: async (params = {}) => {
+        const response = await apiClient.get('/accounts/admin/product-logs/', { params });
+        return response.data.results || response.data;
+    }
+};
+
+// Auth service for authentication operations
+export const authService = {
+    login: async (username, password) => {
+        const response = await apiClient.post('/accounts/login/', {
+            username,
+            password
+        });
+        return response.data;
+    },
+
+    registerEmployee: async (userData) => {
+        const response = await apiClient.post('/accounts/register/employee/', userData);
+        return response.data;
+    },
+
+    registerCustomer: async (userData) => {
+        const response = await apiClient.post('/accounts/register/customer/', userData);
+        return response.data;
+    },
+
+    verifyOTP: async (username, code) => {
+        const response = await apiClient.post('/accounts/verify/customer/otp/', {
+            username,
+            code
+        });
+        return response.data;
+    },
+
+    resendOTP: async (username) => {
+        const response = await apiClient.post('/accounts/resend/customer/otp/', {
+            username
+        });
+        return response.data;
+    },
+
+    getCurrentUser: async () => {
+        const response = await apiClient.get('/accounts/me/');
         return response.data;
     }
 };
