@@ -53,7 +53,7 @@ export default function Header({ language, setLanguage, isMenuOpen, setIsMenuOpe
   { name: language === 'en' ? 'About' : '關於我們', href: '/about' },
   { name: language === 'en' ? 'Solutions' : '產品', href: '/products', isDropdown: true },
   { name: language === 'en' ? 'Successful Story' : '成功的故事', href: '/successful-story' },
-  { name: language === 'en' ? 'Contact' : '聯絡我們', href: '/contact' },
+  { name: language === 'en' ? 'Contact Us' : '聯絡我們', href: '/contact' },
 ];
 
   const solutionSubItems = [

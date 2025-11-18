@@ -12,7 +12,7 @@ export default async function ProductPage({ params }) {
     'CS8959': {
       title: 'CS8959 EVB',
       description:
-        'The CS8959 EVB is an evaluation board specifically designed for automotive electronics applications featuring CAN 2.0 Bus technology. It functions as an in-vehicle serial communication network controller, enabling effective distributed control and real-time monitoring.',
+        'The CS8959 EVB is an evaluation board specifically designed for applications in automotive electronics, including CAN 2.0 Bus technology, an in-vehicle serial communication network controller that can effectively enable distributed control and real-time monitoring. The CS8959 EVB has two CAN buses that can be used for automotive body control units and gateway control units.',
       image: '/cs8959 evb.jpeg',
       features: [
         'MCU: MysonCentury CS8959',
@@ -41,16 +41,31 @@ export default async function ProductPage({ params }) {
       description:
         'The CS8972 EVB is a stand-alone Controller Area Network (CAN) protocol controller with the embedded CAN transceiver. The CAN transceiver meets or exceeds ISO 11898 standards. As CAN transceivers, these devices provide differential transmit and receive capability as signaling rates up to 1 Mb/s for a CAN controller. It is capable of transmitting and receiving standard and extended message frames. It includes eight independent auto-dispatch and 1024-byte transmit buffers, FIFO receives filtering with 12 ID acceptance and message management. The MCU communication is implemented via an industry standard Serial Peripheral Interface (SPI) and an I2C bus. ',
       image: '/CS8972 EVB.jpeg',
+       features: [
+        'The CS8972 is a stand-alone CAN protocol controller with the embedded CAN transceiver.',
+        'It supports standard CAN 2.0B, and the maximal bit rate is 1 Mb/s.',
+        'CS8972 provides two popular serial interfaces for external MCU communication, Serial Peripheral Interface (SPI) and an I 2C bus.',
+        'SPI and I2C are both slave controllers in CS8972. They receive and respond through the selected serial interface to MCU commands.',
+        'In CS8972, MCU only implements a slave SPI controller to receive and respond to the commands.'
+       ],
+        specifications: {
+       'Power Supply': 'DC 5V',
+'Max Operating Clock': '24MHz',
+'CAN Protocol Support': 'CAN 2.0B (Standard & Extended Frames)',
+'Communication Interfaces': 'SPI up to 3Mb/s, I2C up to 2Mb/s',
+'Operating Temperature': '-40℃ to +125℃',
+'Package Type': '20-pin SSOP, RoHS Compliant',
+        },
       downloads: {
-        Datasheet: '/downloads/cs8972-datasheet.pdf',
-        'Quick Start Guide': '/downloads/cs8979-quick-start.pdf',
+         'SSwiSys_CAN-Bus-ECU_CS8972_EVB_Manual_D202006-16':
+          '/Downloads/SwiSys_CAN-Bus-ECU_CS8972_EVB_Manual_D202006-16.pdf',
       },
     },
 
     'cs8961': {
       title: 'CS8961 ECU',
       description:
-        'The CS8961 ECU is an evaluation board specifically designed for automotive electronics applications featuring CAN 2.0 Bus technology...',
+        'The CS8961 ECU is a high-performance evaluation board designed for developing and testing automotive electronic systems. It features CAN 2.0 Bus technology, making it ideal for engineers, students, and developers working on vehicle communication, diagnostics, and control applications. Built with robust hardware components and optimized signal integrity, the CS8961 ECU allows users to generate, analyze, and process automotive-grade CAN signals with high accuracy. Its flexible design supports various testing scenarios, including ECU simulation, CAN message transmission, data logging, and protocol verification. This evaluation board is widely used in automotive R&D, academic projects, and embedded system training environments due to its reliability, ease of integration, and developer-friendly interface.',
       features: [
         'Compatible to ISO 11898-2',
         'Co-Work with MysonCentury',

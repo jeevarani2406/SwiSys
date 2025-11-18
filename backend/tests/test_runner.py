@@ -29,9 +29,9 @@ TEST_SUITES = {
 }
 
 class TestRunner:
-    def __init__(self, python_path="D:/Titan/Projects/Swisys/.venv/Scripts/python.exe"):
+    def __init__(self, python_path="D:/jeevi/Projects/Swisys/.venv/Scripts/python.exe"):
         self.python_path = python_path
-        self.backend_dir = "d:\\Titan\\Projects\\Swisys\\backend"
+        self.backend_dir = "d:\\jeevi\\Projects\\Swisys\\backend"
         self.results = {}
         
     def run_test_suite(self, suite_name, test_path, verbose=False):

@@ -2,12 +2,13 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { Phone, Mail, MapPin } from 'lucide-react';
+import Swal from 'sweetalert2'
 
 export default function Contact({ language = 'en' }) {
-  const [formData, setFormData] = useState({ name: '', email: '', company: '', message: '' });
-  const [isSending, setIsSending] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', Phonenumber: '', message: '' });
   const [showMap, setShowMap] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [result, setResult] = useState(""); // Result state
 
   // Prevent SSR hydration mismatch
   useEffect(() => {
@@ -19,28 +20,35 @@ export default function Contact({ language = 'en' }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSending(true);
+  // Web3Forms submission
+  const onSubmit = async (event) => {
+    event.preventDefault();
+    setResult("Sending....");
+    const formDataWeb3 = new FormData(event.target);
+    formDataWeb3.append("access_key", "ece16dbb-85b6-4471-b156-cfd5b1d7d56d");
 
     try {
-      const res = await fetch('/api/sendEmail', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formDataWeb3
       });
 
-      if (res.ok) {
-        alert(language === 'en' ? '✅ Your message has been sent successfully!' : '✅ 您的訊息已成功發送！');
-        setFormData({ name: '', email: '', company: '', message: '' });
+      const data = await response.json();
+      if (data.success) {
+        Swal.fire({
+          title: "Success!",
+          text: "Message sent Successfully!",
+          icon: "success"
+        });
+        event.target.reset();
+        setFormData({ name: '', email: '', Phonenumber: '', message: '' }); // reset controlled inputs
+        setResult("");
       } else {
-        alert(language === 'en' ? '❌ Failed to send message. Please try again later.' : '❌ 訊息發送失敗，請稍後再試。');
+        setResult("Error sending message.");
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert(language === 'en' ? '⚠️ Error sending message.' : '⚠️ 傳送訊息時出錯。');
-    } finally {
-      setIsSending(false);
+      console.error("Error submitting form:", error);
+      setResult("Error sending message.");
     }
   };
 
@@ -72,7 +80,7 @@ export default function Contact({ language = 'en' }) {
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage:
-              'url(https://images.pexels.com/photos/3862347/pexels-photo-3862347.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop)',
+              'url(https://png.pngtree.com/thumb_back/fw800/background/20231009/pngtree-d-render-of-an-online-marketing-website-on-a-laptop-in-image_13595569.png)',
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 to-purple-900/90"></div>
@@ -84,7 +92,7 @@ export default function Contact({ language = 'en' }) {
           </h1>
           <p className="text-xl text-blue-100 max-w-4xl mx-auto leading-relaxed">
             {language === 'en'
-              ? "Ready to transform your automotive communication needs? Let's start the conversation."
+              ? "We will be pleased to hear from you. Contact us today to learn more about our solution, the technology and how you will be benefit from our goods."
               : '準備好改變您的車用通訊需求了嗎？讓我們開始交流。'}
           </p>
         </div>
@@ -109,23 +117,27 @@ export default function Contact({ language = 'en' }) {
               <h2 className="text-4xl font-bold text-gray-900 mb-8">
                 {language === 'en' ? 'Get in Touch' : '聯絡我們'}
               </h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {['name', 'email', 'company'].map((field) => (
-                  <div key={field}>
+              <form onSubmit={onSubmit} className="space-y-6">
+                {[
+                  { label: 'Name *', key: 'name', type: 'text' },
+                  { label: 'Email *', key: 'email', type: 'email' },
+                  { label: 'Phone number', key: 'Phonenumber', type: 'text' }
+                ].map((field) => (
+                  <div key={field.key}>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
                       {language === 'en'
-                        ? field.charAt(0).toUpperCase() + field.slice(1)
-                        : field === 'email'
+                        ? field.label
+                        : field.key === 'email'
                         ? '郵箱 *'
-                        : field === 'name'
+                        : field.key === 'name'
                         ? '姓名 *'
-                        : '公司'}
+                        : '電話號碼'}
                     </label>
                     <input
-                      type={field === 'email' ? 'email' : 'text'}
-                      name={field}
-                      required={field !== 'company'}
-                      value={formData[field]}
+                      type={field.type}
+                      name={field.key}
+                      required={field.key !== 'Phonenumber'}
+                      value={formData[field.key] || ''} // Ensure controlled input
                       onChange={handleChange}
                       className="w-full px-6 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white/90 backdrop-blur-sm"
                     />
@@ -139,25 +151,19 @@ export default function Contact({ language = 'en' }) {
                     name="message"
                     required
                     rows={5}
-                    value={formData.message}
+                    value={formData.message || ''} // Ensure controlled input
                     onChange={handleChange}
                     className="w-full px-6 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white/90 backdrop-blur-sm"
                   />
                 </div>
                 <button
                   type="submit"
-                  disabled={isSending}
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-8 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50"
                 >
-                  {isSending
-                    ? language === 'en'
-                      ? 'Sending...'
-                      : '發送中...'
-                    : language === 'en'
-                    ? 'Send Message'
-                    : '發送訊息'}
+                  {language === 'en' ? 'Send Message' : '發送訊息'}
                 </button>
               </form>
+              <p className="mt-4 text-center text-lg">{result}</p> {/* Display result */}
             </div>
 
             {/* Contact Info */}
@@ -169,7 +175,7 @@ export default function Contact({ language = 'en' }) {
               <div className="space-y-8">
                 {/* Phone */}
                 <div className="flex items-start group">
-                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-2xl mr-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="bg-gradient-to-br from-purple-500 to-blue-600 p-4 rounded-2xl mr-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Phone className="h-6 w-6 text-white" />
                   </div>
                   <div>
@@ -180,13 +186,13 @@ export default function Contact({ language = 'en' }) {
 
                 {/* Email */}
                 <div className="flex items-start group cursor-pointer" onClick={openGmail}>
-                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-2xl mr-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="bg-gradient-to-br from-purple-500 to-blue-600 p-4 rounded-2xl mr-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Mail className="h-6 w-6 text-white" />
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900 text-lg">{language === 'en' ? 'Email' : '郵箱'}</h4>
                     <p className="text-gray-600 text-lg">swisys.service@gmail.com</p>
-                    <p className="text-gray-600 text-lg">jeevarani2406@gmail.com</p>
+                    <p className="text-gray-600 text-lg">service@swisytem.com</p>
                     <p className="text-purple-600 text-sm mt-2">
                       ✉️ {language === 'en' ? 'Click to open in Gmail' : '點擊在 Gmail 中開啟'}
                     </p>
@@ -195,17 +201,17 @@ export default function Contact({ language = 'en' }) {
 
                 {/* Address */}
                 <div className="flex items-start group cursor-pointer" onClick={toggleMap}>
-                  <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-2xl mr-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="bg-gradient-to-br from-purple-500 to-blue-600 p-4 rounded-2xl mr-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <MapPin className="h-6 w-6 text-white" />
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900 text-lg">{language === 'en' ? 'Address' : '地址'}</h4>
                     <p className="text-gray-600 text-lg">
                       {language === 'en'
-                        ? 'No. 2號, Alley 26, Lane 442, Kaiyuan Rd, North District, Tainan City, 70441'
+                        ? 'No. 2, Alley 26, Lane 442, Kaiyuan Rd, North District, Tainan City, 70441'
                         : '70441 台南市北區開元路442巷26弄2號'}
                     </p>
-                    <p className="text-green-600 text-sm mt-2">📍 {language === 'en' ? 'Tap to view on map' : '點擊查看地圖'}</p>
+                    <p className="text-purple-600 text-sm mt-2">📍 {language === 'en' ? 'Tap to view on map' : '點擊查看地圖'}</p>
                   </div>
                 </div>
               </div>

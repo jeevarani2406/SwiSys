@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { GraduationCap, Building, MapPin, Users, BookOpen, Award, Calendar, Star, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { GraduationCap, Building, MapPin, Users, BookOpen, Award, Calendar, Star, ChevronLeft, ChevronRight, X, ExternalLink } from 'lucide-react';
 
 export default function SuccessfulStory({ language }) {
     const [selectedCollege, setSelectedCollege] = useState(null);
@@ -19,10 +19,10 @@ export default function SuccessfulStory({ language }) {
             descriptionEn: 'Leading university in Coimbatore established under Section 3 of UGC Act 1956, accredited with A+ Grade by NAAC. Prof. Jing-Jou Tang delivered an inspiring speech on Recent Trends in Vehicle Electronics during the Freshers\' Program inauguration on 24 October 2019.',
             descriptionZh: '哥印拜陀的領先大學，根據 UGC 法案第 3 條成立，獲得 NAAC A+ 等級認證。唐敬柔教授於 2019 年 10 月 24 日在新生計劃開幕式上就車輛電子最新趨勢發表了鼓舞人心的演講。',
             images: [
-                '/Picture1.png',
-                '/Picture2.png',
-                '/Picture3.png',
-                '/Picture4.png'
+                '/Picture1.jpg',
+                '/Picture2.jpg',
+                '/Picture3.jpg',
+                '/Picture4.jpg'
             ],
             
             years: '2018-Present',
@@ -62,10 +62,10 @@ export default function SuccessfulStory({ language }) {
             descriptionEn: 'One of the oldest engineering colleges in India with strong automotive engineering programs. Prof. Jing-Jou Tang delivered a comprehensive lecture on vehicle electronics to students and faculty members on 22 October 2019.',
             descriptionZh: '印度最古老的工程學院之一，擁有強大的汽車工程項目。唐敬柔教授於 2019 年 10 月 22 日向師生就車輛電子學進行了全面講座。',
             images: [
-                '/Picture5.png',
-                '/Picture6.png',
-                '/Picture7.png',
-                '/Picture8.png'
+                '/Picture5.jpg',
+                '/Picture6.jpg',
+                '/Picture7.jpg',
+                '/Picture8.jpg'
             ],
             years: '2019-Present',
             projects: 8,
@@ -104,10 +104,10 @@ export default function SuccessfulStory({ language }) {
             descriptionEn: 'Premier institute for technology education with focus on automotive electronics and embedded systems. Prof. Jing-Jou Tang conducted a detailed seminar bridging electronics and automotive engineering disciplines on 23 October 2019.',
             descriptionZh: '技術教育的頂尖機構，專注於汽車電子和嵌入式系統。唐敬柔教授於 2019 年 10 月 23 日舉辦了詳細的研討會，連接電子與汽車工程學科。',
             images: [
-                '/Picture9.png',
-                '/Picture10.png',
-                '/Picture11.png',
-                '/Picture12.png'
+                '/Picture9.jpg',
+                '/Picture10.jpg',
+                '/Picture11.jpg',
+                '/Picture12.jpg'
             ],
             years: '2020-Present',
             projects: 6,
@@ -146,10 +146,10 @@ export default function SuccessfulStory({ language }) {
             descriptionEn: 'Premier technical institute with advanced research in automotive design and engineering. Our partnership focuses on cutting-edge automotive communication technologies.',
             descriptionZh: '頂尖技術機構，在汽車設計和工程方面進行先進研究。我們的合作專注於尖端汽車通信技術。',
             images: [
-                '/Picture13.png',
-                '/Picture14.png',
-                '/Picture15.png',
-                '/Picture16.png'
+                '/Picture13.jpg',
+                '/Picture14.jpg',
+                '/Picture15.jpg',
+                '/Picture16.jpg'
             ],
             years: '2021-Present',
             projects: 5,
@@ -165,10 +165,29 @@ export default function SuccessfulStory({ language }) {
             descriptionEn: 'Innovative university with strong focus on research and development in automotive technologies. Our collaboration has resulted in several patented technologies.',
             descriptionZh: '創新大學，專注於汽車技術的研發。我們的合作產生了多項專利技術。',
             images: [
-                '/Picture17.png',
-                '/Picture18.png',
-                '/Picture19.png',
-                '/Picture20.png'
+                '/Picture17.jpg',
+                '/Picture18.jpg',
+                '/Picture19.jpg',
+                '/Picture20.jpg'
+            ],
+            years: '2019-Present',
+            projects: 7,
+            testimonialEn: 'The industry-academia collaboration with SwiSys has accelerated our research in connected vehicle technologies.',
+            testimonialZh: '與 SwiSys 的產學合作加速了我們在連接車輛技術方面的研究。',
+            testimonialAuthor: 'Dr. Suresh Reddy, R&D Head'
+        },
+        {
+            id: 6,
+            name: 'Chennai Institude of Technology',
+            shortName: 'CIT',
+            location: 'Chennai',
+            descriptionEn: 'Innovative university with strong focus on research and development in automotive technologies. Our collaboration has resulted in several patented technologies.',
+            descriptionZh: '創新大學，專注於汽車技術的研發。我們的合作產生了多項專利技術。',
+            images: [
+                '/Picture21.jpg',
+                '/Picture22.jpg',
+                '/Picture23.jpg',
+                '/Picture24.jpg'
             ],
             years: '2019-Present',
             projects: 7,
@@ -181,21 +200,107 @@ export default function SuccessfulStory({ language }) {
     const industryPartners = [
         {
             id: 1,
-            name: 'TATA Motors',
-            location: 'Multiple Locations',
-            descriptionEn: 'Leading automotive manufacturer collaborating on advanced vehicle communication systems and telematics solutions.',
-            descriptionZh: '領先的汽車製造商，在先進車輛通信系統和遠程信息處理解決方案方面進行合作。',
-            images: [
-                'https://images.unsplash.com/photo-1593941707882-a5bba5331b2a?w=800&h=600&fit=crop',
-                'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800&h=600&fit=crop',
-                'https://images.unsplash.com/photo-1592198084033-aade902d1aae?w=800&h=600&fit=crop',
-                'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&fit=crop'
-            ],
-            years: '2017-Present',
-            projects: 15,
-            testimonialEn: 'SwiSys solutions have significantly improved our vehicle communication reliability and diagnostic capabilities.',
-            testimonialZh: 'SwiSys 解決方案顯著提高了我們的車輛通信可靠性和診斷能力。',
-            testimonialAuthor: 'Mr. Vikram Singh, Head of Telematics'
+            name: 'Vision',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/vision.png',
+            url: 'https://www.visionsecurity.com.tw/',
+            goalEn: 'Leading provider of security and surveillance solutions with innovative technology',
+            goalZh: '領先的安全監控解決方案提供商，擁有創新技術'
+        },
+        {
+            id: 2,
+            name: 'Zeroplus',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/zeroplus.png',
+            url: 'https://www.zeroplus.com.tw/zp/',
+            goalEn: 'Professional logic analyzer and test equipment manufacturer for electronics',
+            goalZh: '專業的邏輯分析儀和電子測試設備製造商'
+        },
+        {
+            id: 3,
+            name: 'GTT',
+            logo: 'https://tse4.mm.bing.net/th/id/OIP.lry12-5kqIdeOweeNaiXNgHaEZ?pid=Api&P=0&h=180g',
+            url: 'https://www.linkedin.com/company/global-travel-trade/posts/?feedView=all/',
+            goalEn: 'Global travel and trade services connecting businesses worldwide',
+            goalZh: '連接全球企業的國際旅行和貿易服務'
+        },
+        {
+            id: 4,
+            name: 'Hsin Tong Tour',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/hsin.png',
+            url: 'https://www.hsin-tong.com.tw/',
+            goalEn: 'Premium tour bus services with focus on safety and comfort',
+            goalZh: '專注於安全和舒適的優質旅遊巴士服務'
+        },
+        {
+            id: 5,
+            name: 'Carce',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/carce.png',
+            url: 'https://www.carce.com.tw/',
+            goalEn: 'Automotive electronics and diagnostic equipment specialist',
+            goalZh: '汽車電子和診斷設備專家'
+        },
+        {
+            id: 6,
+            name: 'Rebit',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/rebit.png',
+            url: 'https://www.rebit.com.tw/',
+            goalEn: 'Data backup and recovery solutions for enterprise security',
+            goalZh: '企業安全的數據備份和恢復解決方案'
+        },
+        {
+            id: 7,
+            name: 'Invax',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/invax.png',
+            url: 'https://www.invax.com.tw/invax.htm',
+            goalEn: 'Advanced industrial automation and control systems',
+            goalZh: '先進的工業自動化和控制系統'
+        },
+        {
+            id: 8,
+            name: 'Megawin',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/megawin.png',
+            url: 'https://www.megawin.com.tw/',
+            goalEn: 'Microcontroller and semiconductor solutions provider',
+            goalZh: '微控制器和半導體解決方案提供商'
+        },
+        {
+            id: 9,
+            name: 'Mouser Electronics',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/mouser.png',
+            url: 'https://www.mouser.tw/',
+            goalEn: 'Global electronic components distributor with extensive inventory',
+            goalZh: '擁有廣泛庫存的全球電子元件分銷商'
+        },
+        {
+            id: 10,
+            name: 'Renesas',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/renesas.png',
+            url: 'https://www.renesas.com/en',
+            goalEn: 'Leading semiconductor solutions for automotive and industrial applications',
+            goalZh: '為汽車和工業應用提供領先的半導體解決方案'
+        },
+        {
+            id: 11,
+            name: 'Cortec',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/cortec.png',
+            url: 'https://www.cortec.com/',
+            goalEn: 'Vapor phase corrosion inhibitors and metal protection',
+            goalZh: '氣相腐蝕抑制劑和金屬保護'
+        },
+        {
+            id: 12,
+            name: 'HTBus',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/htbus.png',
+            url: 'https://www.htbus.com.tw/',
+            goalEn: 'High-tech bus manufacturing with focus on innovation and safety',
+            goalZh: '高科技巴士製造，專注於創新和安全'
+        },
+        {
+            id: 13,
+            name: 'Lumissil Microsystems',
+            logo: 'https://swisystem.com/wp-content/uploads/2020/05/lumissil.png',
+            url: 'https://www.lumissil.com/home',
+            goalEn: 'Integrated circuits and semiconductor solutions for various applications',
+            goalZh: '為各種應用提供集成電路和半導體解決方案'
         }
     ];
 
@@ -290,7 +395,7 @@ export default function SuccessfulStory({ language }) {
                                         <img
                                             src={college.images[0]}
                                             alt={college.name}
-                                            className="w-full h-48 object-cover"
+                                            className="w-full h-80 object-cover"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                                             <span className="text-white text-sm font-semibold">
@@ -329,47 +434,47 @@ export default function SuccessfulStory({ language }) {
 
                     {/* Industry Partners Grid */}
                     {activeTab === 'industry' && (
-                        <div className="grid lg:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {industryPartners.map((company) => (
                                 <div
                                     key={company.id}
-                                    onClick={() => openDetail(company, 'industry')}
-                                    className="bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-300 transform hover:scale-105 cursor-pointer border border-white/50 group"
+                                    className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer border border-gray-100 group hover:border-blue-200"
                                 >
-                                    <div className="relative">
-                                        <img
-                                            src={company.images[0]}
-                                            alt={company.name}
-                                            className="w-full h-48 object-cover"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                                            <span className="text-white text-sm font-semibold">
-                                                {language === 'en' ? 'Click for details' : '點擊查看詳情'}
-                                            </span>
+                                    <div className="p-6 h-full flex flex-col items-center justify-center min-h-[220px]">
+                                        {/* Logo Container */}
+                                        <div className="mb-4 flex items-center justify-center h-20 w-full">
+                                            <img
+                                                src={company.logo}
+                                                alt={company.name}
+                                                className="max-h-16 max-w-full object-contain transition-all duration-300 group-hover:scale-110"
+                                                onError={(e) => {
+                                                    e.target.src = 'https://via.placeholder.com/150x80?text=' + company.name;
+                                                }}
+                                            />
                                         </div>
-                                    </div>
-                                    <div className="p-6">
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div>
-                                                <h3 className="text-lg font-bold text-gray-900">{company.name}</h3>
-                                                <p className="text-gray-600 text-sm mt-1 flex items-center">
-                                                    <MapPin className="h-4 w-4 mr-1" />
-                                                    {company.location}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                                            {language === 'en' ? company.descriptionEn : company.descriptionZh}
+                                        
+                                        {/* Company Name */}
+                                        <h3 className="text-lg font-bold text-gray-900 text-center mb-3 group-hover:text-blue-600 transition-colors duration-300">
+                                            {company.name}
+                                        </h3>
+                                        
+                                        {/* Company Goal */}
+                                        <p className="text-gray-600 text-sm text-center mb-4 line-clamp-2 leading-relaxed">
+                                            {language === 'en' ? company.goalEn : company.goalZh}
                                         </p>
-                                        <div className="flex justify-between items-center text-xs text-gray-500">
-                                            <div className="flex items-center">
-                                                <Users className="h-3 w-3 mr-1" />
-                                                {company.projects} {language === 'en' ? 'Projects' : '項目'}
-                                            </div>
-                                            <div className="flex items-center">
-                                                <Calendar className="h-3 w-3 mr-1" />
-                                                {company.years}
-                                            </div>
+                                        
+                                        {/* Website Link */}
+                                        <div className="mt-auto pt-3">
+                                            <a
+                                                href={company.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition-all duration-300 hover:gap-2 group/link"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                {language === 'en' ? 'Visit Website' : '訪問網站'}
+                                                <ExternalLink className="h-3 w-3 transition-transform duration-300 group-hover/link:scale-110" />
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -410,7 +515,7 @@ export default function SuccessfulStory({ language }) {
                                         <img
                                             src={currentItem.images[currentImageIndex]}
                                             alt={currentItem.name}
-                                            className="w-full h-80 object-cover"
+                                            className="w-full h-96 object-cover"
                                         />
                                         {currentItem.images.length > 1 && (
                                             <>
@@ -539,7 +644,7 @@ export default function SuccessfulStory({ language }) {
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Link 
                                 href="/contact" 
-                                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-center"
+                                className="border-2 border-blue-600 text-blue-600 px-10 py-4 rounded-xl font-semibold hover:bg-blue-600 hover:text-white transition-all duration-300 transform hover:scale-105 text-center"
                             >
                                 {language === 'en' ? 'Start Collaboration' : '開始合作'}
                             </Link>
