@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from 'next/navigation';
-import { productService } from '../../services/api';
+import { productService } from "@/services/api";
 
 export default function CustomerDashboard() {
   const { user, logout } = useAuth();
@@ -15,7 +15,7 @@ export default function CustomerDashboard() {
   const [showProductModal, setShowProductModal] = useState(false);
 
   useEffect(() => {
-    if (!user || user.role !== 'customer') {
+    if (!user || user.role !== 'admin') {
       router.push('/login');
       return;
     }

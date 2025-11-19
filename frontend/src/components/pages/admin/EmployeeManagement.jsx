@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from 'next/navigation';
 
 // Mock API client since the real endpoints don't exist
@@ -206,7 +206,7 @@ export default function J1939ManagementSystem() {
     });
 
     useEffect(() => {
-        if (!user || user.role !== 'employee') {
+        if (!user || user.role !== 'admin') {
             router.push('/login');
             return;
         }
