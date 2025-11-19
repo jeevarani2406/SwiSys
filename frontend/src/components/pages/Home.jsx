@@ -1,8 +1,9 @@
 'use client';
 
-import React from "react";
+import React, { useState, useCallback, useEffect } from 'react';
 import Link from "next/link";
-import { Car, Settings, Shield, Wifi, Target, Zap, Cloud, Play } from "lucide-react";
+import { Car, Settings, Shield, Wifi, Target, Zap, Cloud, Play, Phone, Mail, MapPin } from "lucide-react";
+import Swal from 'sweetalert2'
 
 export default function Home({ language }) {
     // Video files array (titles, descriptions, icons removed)
@@ -17,6 +18,63 @@ export default function Home({ language }) {
             link: 'https://swisystem.com/wp-content/uploads/2020/09/SWISYS-OBDII-Bridge-with-GARMIN-VIRB-360-1.mp4,'
         }
     ];
+
+    // Contact form state
+    const [formData, setFormData] = useState({ name: '', email: '', Phonenumber: '', message: '' });
+    const [result, setResult] = useState("");
+
+    const handleChange = useCallback((e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    }, []);
+
+    // Web3Forms submission
+    const onSubmit = async (event) => {
+        event.preventDefault();
+        setResult("Sending....");
+        const formDataWeb3 = new FormData(event.target);
+        formDataWeb3.append("access_key", "ece16dbb-85b6-4471-b156-cfd5b1d7d56d");
+
+        try {
+            const response = await fetch("https://api.web3forms.com/submit", {
+                method: "POST",
+                body: formDataWeb3
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                Swal.fire({
+                    title: "Success!",
+                    text: "Message sent Successfully!",
+                    icon: "success"
+                });
+                event.target.reset();
+                setFormData({ name: '', email: '', Phonenumber: '', message: '' });
+                setResult("");
+            } else {
+                setResult("Error sending message.");
+            }
+        } catch (error) {
+            console.error("Error submitting form:", error);
+            setResult("Error sending message.");
+        }
+    };
+
+    const openGoogleMaps = useCallback(() => {
+        const address = '70441 台南市北區開元路442巷26弄2號';
+        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+        if (typeof window !== 'undefined') {
+            window.open(url, '_blank');
+        }
+    }, []);
+
+    const openGmail = useCallback(() => {
+        const email = 'swisys.service@gmail.com';
+        const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}`;
+        if (typeof window !== 'undefined') {
+            window.open(url, '_blank');
+        }
+    }, []);
 
     return (
         <div className="bg-white">
@@ -65,11 +123,11 @@ export default function Home({ language }) {
                             </Link>
                         </div>
                     </div>
-                </div>
 
-                <div className="absolute top-20 left-10 w-20 h-20 bg-blue-400/20 rounded-full blur-xl animate-pulse" />
-                <div className="absolute bottom-20 right-10 w-32 h-32 bg-purple-400/20 rounded-full blur-xl animate-pulse delay-1000" />
-                <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-cyan-400/20 rounded-full blur-xl animate-pulse delay-500" />
+                    <div className="absolute top-20 left-10 w-20 h-20 bg-blue-400/20 rounded-full blur-xl animate-pulse" />
+                    <div className="absolute bottom-20 right-10 w-32 h-32 bg-purple-400/20 rounded-full blur-xl animate-pulse delay-1000" />
+                    <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-cyan-400/20 rounded-full blur-xl animate-pulse delay-500" />
+                </div>
             </section>
 
             {/* Core Technologies */}
@@ -274,9 +332,8 @@ export default function Home({ language }) {
                     {/* Simplified video cards */}
                     <div className="grid md:grid-cols-3 gap-8">
                         {videos.map((video, index) => {
-                            // support both `src` and `link`, and strip trailing commas from URLs
                             const raw = (video.src ?? video.link ?? "");
-                            const videoSrc = raw.replace(/,+$/,""); // remove trailing commas
+                            const videoSrc = raw.replace(/,+$/,"");
                             return (
                                 <div
                                     key={index}
@@ -287,8 +344,6 @@ export default function Home({ language }) {
                                             <video
                                                 className="w-full h-full object-cover"
                                                 controls
-                                                // preload="metadata"
-                                                // poster={video.poster} // keep if poster exists
                                             >
                                                 <source src={videoSrc} type="video/mp4" />
                                                 {language === "en"
@@ -315,6 +370,135 @@ export default function Home({ language }) {
                                 ? "Click on videos to play and see our technology in action"
                                 : "點擊視頻播放，觀看我們的技術實際應用"}
                         </p>
+                    </div>
+                </div>
+            </section>
+
+            {/* Simple Get in Touch Section */}
+            <section className="relative py-20 overflow-hidden">
+                <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{
+                        backgroundImage:
+                            'url(https://png.pngtree.com/thumb_back/fw800/background/20231009/pngtree-d-render-of-an-online-marketing-website-on-a-laptop-in-image_13595569.png)',
+                    }}
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 to-purple-900/90"></div>
+                </div>
+
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-5xl md:text-6xl font-bold mb-6 text-white">
+                            {language === 'en' ? 'Get In Touch' : '聯絡我們'}
+                        </h2>
+                        <p className="text-xl text-blue-100 max-w-4xl mx-auto leading-relaxed">
+                            {language === 'en'
+                                ? "Ready to transform your automotive communication needs? Let's start the conversation."
+                                : '準備好改變您的車用通訊需求了嗎？讓我們開始交流。'}
+                        </p>
+                    </div>
+
+                    <div className="grid lg:grid-cols-2 gap-12">
+                        {/* Simple Contact Form */}
+                        <div className="bg-white/10 backdrop-blur-sm p-8 rounded-3xl border border-white/20">
+                            <h3 className="text-2xl font-bold text-white mb-6">
+                                {language === "en" ? "Send Message" : "發送訊息"}
+                            </h3>
+                            <form onSubmit={onSubmit} className="space-y-4">
+                                <input
+                                    type="text"
+                                    name="name"
+                                    required
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    placeholder={language === 'en' ? 'Your Name' : '您的姓名'}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    required
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    placeholder={language === 'en' ? 'Your Email' : '您的郵箱'}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                />
+                                <input
+                                    type="tel"
+                                    name="Phonenumber"
+                                    value={formData.Phonenumber}
+                                    onChange={handleChange}
+                                    placeholder={language === 'en' ? 'Phone Number (Optional)' : '電話號碼 (選填)'}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                />
+                                <textarea
+                                    name="message"
+                                    required
+                                    rows={4}
+                                    value={formData.message}
+                                    onChange={handleChange}
+                                    placeholder={language === 'en' ? 'Your Message' : '您的訊息'}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                />
+                                <button
+                                    type="submit"
+                                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+                                >
+                                    {language === 'en' ? 'Send Message' : '發送訊息'}
+                                </button>
+                            </form>
+                            {result && <p className="mt-4 text-center text-blue-200 text-sm">{result}</p>}
+                        </div>
+
+                        {/* Simple Contact Info */}
+                        <div className="space-y-6">
+                            <div className="bg-white/10 backdrop-blur-sm p-8 rounded-3xl border border-white/20">
+                                <h3 className="text-2xl font-bold text-white mb-6">
+                                    {language === "en" ? "Contact Info" : "聯絡資訊"}
+                                </h3>
+                                
+                                <div className="space-y-4">
+                                    <div className="flex items-center space-x-4">
+                                        <Phone className="h-5 w-5 text-blue-300" />
+                                        <div>
+                                            <p className="text-white font-semibold">+886 6 200 6070</p>
+                                            <p className="text-blue-200 text-sm">{language === 'en' ? 'Phone' : '電話'}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center space-x-4 cursor-pointer" onClick={openGmail}>
+                                        <Mail className="h-5 w-5 text-blue-300" />
+                                        <div>
+                                            <p className="text-white font-semibold">swisys.service@gmail.com</p>
+                                            <p className="text-blue-200 text-sm">{language === 'en' ? 'Email' : '郵箱'}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center space-x-4 cursor-pointer" onClick={openGoogleMaps}>
+                                        <MapPin className="h-5 w-5 text-blue-300" />
+                                        <div>
+                                            <p className="text-white font-semibold">
+                                                {language === 'en' 
+                                                    ? 'Tainan City, Taiwan' 
+                                                    : '台南市, 台灣'}
+                                            </p>
+                                            <p className="text-blue-200 text-sm">{language === 'en' ? 'Address' : '地址'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 pt-6 border-t border-white/20">
+                                    <h4 className="text-white font-semibold mb-3">
+                                        {language === 'en' ? 'Business Hours' : '營業時間'}
+                                    </h4>
+                                    <div className="text-blue-200 text-sm space-y-1">
+                                        <p>{language === 'en' ? 'Mon - Fri: 9:00 AM - 6:00 PM' : '週一 - 週五: 9:00 - 18:00'}</p>
+                                        <p>{language === 'en' ? 'Sat: 9:00 AM - 12:00 PM' : '週六: 9:00 - 12:00'}</p>
+                                        <p>{language === 'en' ? 'Sun: Closed' : '週日: 休息'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
