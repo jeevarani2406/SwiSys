@@ -70,12 +70,13 @@ logs/
 *.log
 
 # Media files (keep structure but ignore content)
-/media/j1939_uploads/**/*
-!/media/j1939_uploads/.gitkeep
-/media/standard_files/**/*
-!/media/standard_files/.gitkeep
-/media/auxiliary_files/**/*
-!/media/auxiliary_files/.gitkeep
+backend/media/j1939_uploads/**/*
+!backend/media/j1939_uploads/.gitkeep
+backend/media/standard_files/**/*
+!backend/media/standard_files/.gitkeep
+backend/media/auxiliary_files/**/*
+!backend/media/auxiliary_files/.gitkeep
+backend/media/
 
 # Database
 *.sqlite3
