@@ -16,11 +16,6 @@ function WelcomeSection({ language }) {
             <p className="text-2xl font-semibold text-blue-200 drop-shadow-md">
                 {language === 'en' ? 'Securely access your data and personalized dashboard.' : '安全地訪問您的數據和個人化儀表板。'}
             </p>
-            <ul className="list-disc list-inside text-lg text-blue-300/90 space-y-2 pt-4">
-                <li>{language === 'en' ? 'Admin, Employee, or Customer roles.' : '管理員、員工或客戶角色。'}</li>
-                <li>{language === 'en' ? 'Advanced Encryption.' : '先進加密。'}</li>
-                <li>{language === 'en' ? 'Tailored experience.' : '量身定制的體驗。'}</li>
-            </ul>
         </div>
     );
 }

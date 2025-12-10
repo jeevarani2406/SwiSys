@@ -64,6 +64,7 @@ export default async function ProductPage({ params }) {
 
     'cs8961': {
       title: 'CS8961 ECU',
+      image: '/cs8961.png',
       description:
         'The CS8961 ECU is a high-performance evaluation board designed for developing and testing automotive electronic systems. It features CAN 2.0 Bus technology, making it ideal for engineers, students, and developers working on vehicle communication, diagnostics, and control applications. Built with robust hardware components and optimized signal integrity, the CS8961 ECU allows users to generate, analyze, and process automotive-grade CAN signals with high accuracy. Its flexible design supports various testing scenarios, including ECU simulation, CAN message transmission, data logging, and protocol verification. This evaluation board is widely used in automotive R&D, academic projects, and embedded system training environments due to its reliability, ease of integration, and developer-friendly interface.',
       features: [
@@ -143,6 +144,7 @@ specifications: {
     },
     'j1939-recorder': {
       title: 'J1939 Recorder',
+      image: '/j1939-recorder.png',
       description:
         'The product J1939-DBR has two high performance independent CAN communication channels that can be configured to store either CAN or J1939 data concurrently. The J1939 data can be accessed via actively or passive mode on any parameters specified by customers. This product is beneficial to ADAS (Advanced Driving Assistant System) or FMS (Fleet Management System) product development for heavy duty vehicles. The hardware is also applicable for the IVN(In-Vehicle-Networking) gateway design with firmware design by request.',
       features: [
@@ -194,6 +196,7 @@ specifications: {
     },
     'CCP': {
       title: 'Contactless CAN Probe (CCP)',
+      image: '/CCP.png',
       description:
         'Contacless CAN probe device is designed for efficient CAN Bus data monitoring in applications such as transportation and industrial automation. It allows sniffing vehicle CAN bus data without directly connecting to signal wires, making installation safe and non-intrusive. The device features a patented robust encapsulation that protects it against environmental stresses including humidity, dust, temperature fluctuations, electrical interference, and shock. It is easy to install and operate, supports a single CAN Bus channel, and is fully compatible with the ISO 11898 standard (CAN 2.0A/11-bit and CAN 2.0B/29-bit). Additionally, it can be integrated with other systems like CANtoUART, OBDII bridges, and J1939 bridges for extended functionality.',
       features: [

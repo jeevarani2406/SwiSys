@@ -192,8 +192,23 @@ else:
 # -------------------------
 # CORS SETTINGS
 # -------------------------
+# During development allow local frontend. Set env CORS_ALLOW_ALL_ORIGINS=True to allow all origins.
 CORS_ALLOW_ALL_ORIGINS = env('CORS_ALLOW_ALL_ORIGINS')
-if not CORS_ALLOW_ALL_ORIGINS: CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS', default=[])
+if CORS_ALLOW_ALL_ORIGINS:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    # default to allowing localhost:3000 for the Next.js dev server
+    CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS', default=['http://localhost:3000'])
+
+# Allow credentials (cookies) for cross-site requests
+CORS_ALLOW_CREDENTIALS = True
+
+# Trust the frontend origin for CSRF (development)
+CSRF_TRUSTED_ORIGINS = env('CSRF_TRUSTED_ORIGINS', default=['http://localhost:3000'])
+
+# Increase upload limits for large Excel files in development (bytes). Adjust as needed.
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(env('DATA_UPLOAD_MAX_MEMORY_SIZE', default=26214400))  # 25 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(env('FILE_UPLOAD_MAX_MEMORY_SIZE', default=26214400))  # 25 MB
 
 # -------------------------
 # API DOCUMENTATION

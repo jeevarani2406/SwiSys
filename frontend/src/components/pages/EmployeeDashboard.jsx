@@ -1,141 +1,261 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import apiClient from '../../services/api';
 
-// Mock API client since the real endpoints don't exist
-const mockApiClient = {
-  get: async (endpoint) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Return mock data based on endpoint
-    switch (endpoint) {
-      case '/j1939/standard-files/':
-        return {
-          data: [
-            {
-              id: 1,
-              Standard_No: 'J1939-71 MAR2011',
-              Standard_Name: 'Vehicle Application Layer',
-              Issued_Date: '1994-08-01',
-              Revised_Date: '2011-03-01',
-              Resource: 'https://www.sae.org/standards/content/j1939-71_201103/',
-              File: null,
-              Note: 'Main vehicle application layer standard'
-            },
-            {
-              id: 2,
-              Standard_No: 'J1939-73 MAR2011',
-              Standard_Name: 'Diagnostics',
-              Issued_Date: '1996-02-01',
-              Revised_Date: '2011-03-01',
-              Resource: 'https://www.sae.org/standards/content/j1939-73_201103/',
-              File: null,
-              Note: 'Diagnostic data link layer'
-            }
-          ]
-        };
-      
-      case '/j1939/auxiliary-files/':
-        return {
-          data: [
-            {
-              id: 1,
-              Title: 'Engine Temperature Calculation Guide',
-              Description: 'Detailed guide for engine temperature SPN calculations',
-              Published_Date: '2023-01-15',
-              Resource: '',
-              File: null,
-              Linked_Standard: 1
-            },
-            {
-              id: 2,
-              Title: 'Engine Speed Calculation Guide',
-              Description: 'Guide for engine speed parameter calculations',
-              Published_Date: '2023-02-20',
-              Resource: '',
-              File: null,
-              Linked_Standard: 1
-            }
-          ]
-        };
-      
-      case '/j1939/categories/':
-        return {
-          data: [
-            { id: 1, Keyword_EN: 'Speed', Keyword_CH: '速度類' },
-            { id: 2, Keyword_EN: 'Temperature', Keyword_CH: '溫度類' },
-            { id: 3, Keyword_EN: 'Brake', Keyword_CH: '剎車類' },
-            { id: 4, Keyword_EN: 'Oil', Keyword_CH: '油類' }
-          ]
-        };
-      
-      case '/j1939/pgns/':
-        return {
-          data: [
-            {
-              id: 1,
-              PGN_Number: '1001',
-              Name_Description: 'Engine Speed Message',
-              Category: 1,
-              Linked_Standard: 1
-            },
-            {
-              id: 2,
-              PGN_Number: '1002',
-              Name_Description: 'Engine Temperature Message',
-              Category: 2,
-              Linked_Standard: 1
-            }
-          ]
-        };
-      
-      case '/j1939/spns/':
-        return {
-          data: [
-            {
-              id: 1,
-              SPN_Number: '110',
-              Name_Description: 'Engine Temperature Sensor',
-              Linked_PGN: 2,
-              Category: 2,
-              Linked_Auxiliary: 1
-            },
-            {
-              id: 2,
-              SPN_Number: '120',
-              Name_Description: 'Engine Speed Sensor',
-              Linked_PGN: 1,
-              Category: 1,
-              Linked_Auxiliary: 2
-            }
-          ]
-        };
-      
-      default:
-        throw new Error(`Endpoint ${endpoint} not found`);
+// File type constants
+const ALLOWED_FILE_TYPES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+  'application/msword',
+  'application/zip',
+  'application/x-zip-compressed',
+  'text/csv'
+];
+
+const FILE_EXTENSIONS = {
+  'application/pdf': 'PDF',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
+  'application/vnd.ms-excel': 'XLS',
+  'application/msword': 'DOC',
+  'application/zip': 'ZIP',
+  'application/x-zip-compressed': 'ZIP',
+  'text/csv': 'CSV'
+};
+
+// Calendar Component
+const CalendarPicker = ({ 
+  value, 
+  onChange, 
+  name, 
+  placeholder = "Select date",
+  minDate = null,
+  maxDate = null 
+}) => {
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const calendarRef = useRef(null);
+
+  // Format date for display
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Generate days in month
+  const getDaysInMonth = () => {
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+    const days = [];
+
+    // Previous month's days
+    const prevMonthDays = new Date(currentYear, currentMonth, 0).getDate();
+    for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+      days.push({
+        day: prevMonthDays - i,
+        month: currentMonth - 1,
+        year: currentMonth === 0 ? currentYear - 1 : currentYear,
+        isCurrentMonth: false
+      });
     }
-  },
-  
-  post: async (endpoint, data) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('POST to', endpoint, 'with data:', data);
-    return { data: { ...data, id: Date.now() } };
-  },
-  
-  put: async (endpoint, data) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('PUT to', endpoint, 'with data:', data);
-    return { data };
-  },
-  
-  delete: async (endpoint) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('DELETE to', endpoint);
-    return { data: { success: true } };
-  }
+
+    // Current month's days
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push({
+        day: i,
+        month: currentMonth,
+        year: currentYear,
+        isCurrentMonth: true
+      });
+    }
+
+    // Next month's days
+    const totalCells = 42; // 6 weeks
+    for (let i = 1; days.length < totalCells; i++) {
+      days.push({
+        day: i,
+        month: currentMonth + 1,
+        year: currentMonth === 11 ? currentYear + 1 : currentYear,
+        isCurrentMonth: false
+      });
+    }
+
+    return days;
+  };
+
+  // Handle date selection
+  const handleDateSelect = (day, month, year) => {
+    const date = new Date(year, month, day);
+    const dateString = date.toISOString().split('T')[0];
+    onChange({ target: { name, value: dateString } });
+    setShowCalendar(false);
+  };
+
+  // Navigate months
+  const prevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
+
+  const nextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
+
+  // Close calendar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+        setShowCalendar(false);
+      }
+    };
+
+    if (showCalendar) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCalendar]);
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  return (
+    <div className="relative" ref={calendarRef}>
+      <div className="relative">
+        <input
+          type="text"
+          name={name}
+          value={formatDateForDisplay(value)}
+          onChange={(e) => onChange(e)}
+          placeholder={placeholder}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 pr-10"
+          onClick={() => setShowCalendar(!showCalendar)}
+          readOnly
+        />
+        <button
+          type="button"
+          onClick={() => setShowCalendar(!showCalendar)}
+          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </button>
+      </div>
+
+      {showCalendar && (
+        <div className="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg w-64">
+          {/* Calendar Header */}
+          <div className="flex items-center justify-between p-3 border-b">
+            <button
+              type="button"
+              onClick={prevMonth}
+              className="p-1 rounded hover:bg-gray-100"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div className="font-semibold">
+              {monthNames[currentMonth]} {currentYear}
+            </div>
+            <button
+              type="button"
+              onClick={nextMonth}
+              className="p-1 rounded hover:bg-gray-100"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Day Names */}
+          <div className="grid grid-cols-7 gap-1 p-2">
+            {dayNames.map((day) => (
+              <div key={day} className="text-center text-xs font-medium text-gray-500 py-1">
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Days Grid */}
+          <div className="grid grid-cols-7 gap-1 p-2">
+            {getDaysInMonth().map((date, index) => {
+              const isSelected = value && 
+                new Date(value).getDate() === date.day &&
+                new Date(value).getMonth() === date.month &&
+                new Date(value).getFullYear() === date.year;
+              
+              const isToday = date.day === new Date().getDate() &&
+                date.month === new Date().getMonth() &&
+                date.year === new Date().getFullYear();
+
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleDateSelect(date.day, date.month, date.year)}
+                  className={`
+                    h-8 w-8 flex items-center justify-center rounded-full text-sm
+                    ${isSelected ? 'bg-blue-600 text-white' : ''}
+                    ${!isSelected && date.isCurrentMonth ? 'text-gray-900 hover:bg-gray-100' : ''}
+                    ${!isSelected && !date.isCurrentMonth ? 'text-gray-400 hover:bg-gray-50' : ''}
+                    ${isToday && !isSelected ? 'border border-blue-500' : ''}
+                  `}
+                  disabled={!date.isCurrentMonth}
+                >
+                  {date.day}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Today Button */}
+          <div className="p-2 border-t">
+            <button
+              type="button"
+              onClick={() => {
+                const today = new Date();
+                const todayString = today.toISOString().split('T')[0];
+                onChange({ target: { name, value: todayString } });
+                setShowCalendar(false);
+              }}
+              className="w-full py-2 text-sm text-blue-600 hover:bg-blue-50 rounded"
+            >
+              Today
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default function J1939ManagementSystem() {
@@ -145,7 +265,7 @@ export default function J1939ManagementSystem() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     
-    // Data states for SAE J1939 Management
+    // Data states
     const [standardFiles, setStandardFiles] = useState([]);
     const [auxiliaryFiles, setAuxiliaryFiles] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -159,6 +279,8 @@ export default function J1939ManagementSystem() {
     const [showPgnModal, setShowPgnModal] = useState(false);
     const [showSpnModal, setShowSpnModal] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
+    const [showFilePreview, setShowFilePreview] = useState(false);
+    const [previewFile, setPreviewFile] = useState(null);
     
     const [confirmationAction, setConfirmationAction] = useState(null);
     const [selectedRecord, setSelectedRecord] = useState(null);
@@ -172,7 +294,7 @@ export default function J1939ManagementSystem() {
         Issued_Date: '',
         Revised_Date: '',
         Resource: '',
-        File: null,
+        file: null,
         Note: ''
     });
 
@@ -181,7 +303,7 @@ export default function J1939ManagementSystem() {
         Description: '',
         Published_Date: '',
         Resource: '',
-        File: null,
+        file: null,
         Linked_Standard: ''
     });
 
@@ -226,71 +348,158 @@ export default function J1939ManagementSystem() {
             ]);
         } catch (error) {
             console.error('Error loading initial data:', error);
-            setError('Failed to load data. Please try again.');
+            // Don't set error if endpoints are just not available
         } finally {
             setLoading(false);
         }
     };
 
-    // API fetch functions with error handling
+    // API fetch functions
     const fetchStandardFiles = async () => {
         try {
-            const response = await mockApiClient.get('/j1939/standard-files/');
-            setStandardFiles(response.data);
+            console.log('Fetching standard files from:', `/j1939/standard-files/`);
+            const response = await apiClient.get('/j1939/standard-files/');
+            console.log('Standard files response:', response);
+            setStandardFiles(Array.isArray(response.data) ? response.data : response.data?.results || []);
         } catch (error) {
-            console.error('Error fetching standard files:', error);
-            throw error;
+            console.error('Error fetching standard files:', error.response?.status, error.message);
+            // Set empty array on error instead of throwing
+            setStandardFiles([]);
         }
     };
 
     const fetchAuxiliaryFiles = async () => {
         try {
-            const response = await mockApiClient.get('/j1939/auxiliary-files/');
-            setAuxiliaryFiles(response.data);
+            console.log('Fetching auxiliary files from:', `/j1939/auxiliary-files/`);
+            const response = await apiClient.get('/j1939/auxiliary-files/');
+            console.log('Auxiliary files response:', response);
+            setAuxiliaryFiles(Array.isArray(response.data) ? response.data : response.data?.results || []);
         } catch (error) {
-            console.error('Error fetching auxiliary files:', error);
-            throw error;
+            console.error('Error fetching auxiliary files:', error.response?.status, error.message);
+            setAuxiliaryFiles([]);
         }
     };
 
     const fetchCategories = async () => {
         try {
-            const response = await mockApiClient.get('/j1939/categories/');
-            setCategories(response.data);
+            console.log('Fetching categories from:', `/j1939/categories/`);
+            const response = await apiClient.get('/j1939/categories/');
+            console.log('Categories response:', response);
+            setCategories(Array.isArray(response.data) ? response.data : response.data?.results || []);
         } catch (error) {
-            console.error('Error fetching categories:', error);
-            throw error;
+            console.error('Error fetching categories:', error.response?.status, error.message);
+            setCategories([]);
         }
     };
 
     const fetchPgns = async () => {
         try {
-            const response = await mockApiClient.get('/j1939/pgns/');
-            setPgns(response.data);
+            console.log('Fetching PGNs from:', `/j1939/pgns/`);
+            const response = await apiClient.get('/j1939/pgns/');
+            console.log('PGNs response:', response);
+            setPgns(Array.isArray(response.data) ? response.data : response.data?.results || []);
         } catch (error) {
-            console.error('Error fetching PGNs:', error);
-            throw error;
+            console.error('Error fetching PGNs:', error.response?.status, error.message);
+            setPgns([]);
         }
     };
 
     const fetchSpns = async () => {
         try {
-            const response = await mockApiClient.get('/j1939/spns/');
-            setSpns(response.data);
+            console.log('Fetching SPNs from:', `/j1939/spns/`);
+            const response = await apiClient.get('/j1939/spns/');
+            console.log('SPNs response:', response);
+            setSpns(Array.isArray(response.data) ? response.data : response.data?.results || []);
         } catch (error) {
-            console.error('Error fetching SPNs:', error);
-            throw error;
+            console.error('Error fetching SPNs:', error.response?.status, error.message);
+            setSpns([]);
+        }
+    };
+
+    // File handling functions
+    const handleFileInputChange = (setForm) => (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+            setError(`Invalid file type. Allowed types: ${Object.values(FILE_EXTENSIONS).join(', ')}`);
+            e.target.value = '';
+            return;
+        }
+
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            setError('File size too large. Maximum size is 10MB.');
+            e.target.value = '';
+            return;
+        }
+
+        setForm(prev => ({
+            ...prev,
+            file: file
+        }));
+    };
+
+    const handleViewFile = (fileData) => {
+        setPreviewFile(fileData);
+        setShowFilePreview(true);
+    };
+
+    const handleDownloadFile = (fileData) => {
+        // In real application, this would be a download link
+        alert(`Downloading: ${fileData.name}\nSize: ${fileData.size}\nType: ${FILE_EXTENSIONS[fileData.type] || fileData.type}`);
+    };
+
+    const getFileIcon = (fileType) => {
+        switch (fileType) {
+            case 'application/pdf':
+                return (
+                    <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                    </svg>
+                );
+            case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+            case 'application/vnd.ms-excel':
+                return (
+                    <svg className="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                    </svg>
+                );
+            case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+            case 'application/msword':
+                return (
+                    <svg className="w-6 h-6 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                    </svg>
+                );
+            case 'application/zip':
+            case 'application/x-zip-compressed':
+                return (
+                    <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                    </svg>
+                );
+            case 'text/csv':
+                return (
+                    <svg className="w-6 h-6 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                    </svg>
+                );
+            default:
+                return (
+                    <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                    </svg>
+                );
         }
     };
 
     // Generic handlers
     const handleInputChange = (form, setForm) => (e) => {
-        const { name, value, type, files } = e.target;
+        const { name, value, type } = e.target;
         if (type === 'file') {
-            setForm(prev => ({
-                ...prev,
-                [name]: files[0]
-            }));
+            handleFileInputChange(setForm)(e);
         } else {
             setForm(prev => ({
                 ...prev,
@@ -299,35 +508,52 @@ export default function J1939ManagementSystem() {
         }
     };
 
+    // Build FormData when files are present so backend receives multipart
+    const buildFormData = (form, endpoint) => {
+        // Map frontend field names to backend expectations per endpoint
+        const keyMap = {};
+        if (endpoint === '/j1939/standard-files/') {
+            keyMap.file = 'File';
+        } else if (endpoint === '/j1939/auxiliary-files/') {
+            keyMap.file = 'File';
+            keyMap.Title = 'File_Name';
+        }
+
+        const fd = new FormData();
+        Object.entries(form).forEach(([key, value]) => {
+            if (value === null || value === undefined || value === '') return;
+            const mappedKey = keyMap[key] || key;
+            fd.append(mappedKey, value);
+        });
+        return fd;
+    };
+
     const handleAddRecord = async (endpoint, form, resetForm, fetchData, successMessage) => {
         try {
             setError(null);
-            // For file uploads, you would normally use FormData
-            // But for mock data, we'll just pass the object
-            const response = await mockApiClient.post(endpoint, form);
+            const hasFile = !!form.file;
+            const payload = hasFile ? buildFormData(form, endpoint) : form;
+            const config = hasFile ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined;
+
+            const response = await apiClient.post(endpoint, payload, config);
+            const data = response.data || response;
             
-            // Update local state
-            if (fetchData) {
-                await fetchData();
-            } else {
-                // For immediate UI update
-                switch (endpoint) {
-                    case '/j1939/standard-files/':
-                        setStandardFiles(prev => [...prev, response.data]);
-                        break;
-                    case '/j1939/auxiliary-files/':
-                        setAuxiliaryFiles(prev => [...prev, response.data]);
-                        break;
-                    case '/j1939/categories/':
-                        setCategories(prev => [...prev, response.data]);
-                        break;
-                    case '/j1939/pgns/':
-                        setPgns(prev => [...prev, response.data]);
-                        break;
-                    case '/j1939/spns/':
-                        setSpns(prev => [...prev, response.data]);
-                        break;
-                }
+            switch (endpoint) {
+                case '/j1939/standard-files/':
+                    setStandardFiles(prev => [...prev, data]);
+                    break;
+                case '/j1939/auxiliary-files/':
+                    setAuxiliaryFiles(prev => [...prev, data]);
+                    break;
+                case '/j1939/categories/':
+                    setCategories(prev => [...prev, data]);
+                    break;
+                case '/j1939/pgns/':
+                    setPgns(prev => [...prev, data]);
+                    break;
+                case '/j1939/spns/':
+                    setSpns(prev => [...prev, data]);
+                    break;
             }
             
             resetForm();
@@ -341,21 +567,34 @@ export default function J1939ManagementSystem() {
     const handleUpdateRecord = async (endpoint, form, recordId, resetForm, fetchData, successMessage) => {
         try {
             setError(null);
-            await mockApiClient.put(`${endpoint}${recordId}/`, form);
+            const hasFile = !!form.file;
+            const payload = hasFile ? buildFormData(form, endpoint) : form;
+            const config = hasFile ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined;
+            const method = hasFile ? 'put' : 'patch';
+
+            const response = await apiClient[method](`${endpoint}${recordId}/`, payload, config);
+            const data = response.data || response;
             
-            if (fetchData) {
-                await fetchData();
-            } else {
-                // Update local state
-                const updatedData = { ...form, id: recordId };
-                switch (endpoint) {
-                    case '/j1939/standard-files/':
-                        setStandardFiles(prev => prev.map(item => item.id === recordId ? updatedData : item));
-                        break;
-                    case '/j1939/categories/':
-                        setCategories(prev => prev.map(item => item.id === recordId ? updatedData : item));
-                        break;
-                }
+            const updatedData = { ...data, id: recordId };
+            if (form.file) {
+                updatedData.File = {
+                    name: form.file.name,
+                    type: form.file.type,
+                    size: `${(form.file.size / 1024 / 1024).toFixed(1)} MB`,
+                    uploaded_date: new Date().toISOString().split('T')[0]
+                };
+            }
+            
+            switch (endpoint) {
+                case '/j1939/standard-files/':
+                    setStandardFiles(prev => prev.map(item => item.id === recordId ? updatedData : item));
+                    break;
+                case '/j1939/auxiliary-files/':
+                    setAuxiliaryFiles(prev => prev.map(item => item.id === recordId ? updatedData : item));
+                    break;
+                case '/j1939/categories/':
+                    setCategories(prev => prev.map(item => item.id === recordId ? updatedData : item));
+                    break;
             }
             
             resetForm();
@@ -366,33 +605,28 @@ export default function J1939ManagementSystem() {
         }
     };
 
-    const handleDeleteRecord = async (endpoint, recordId, fetchData, successMessage) => {
+    const handleDeleteRecord = async (endpoint, recordId, successMessage) => {
         setConfirmationAction(() => async () => {
             try {
                 setError(null);
-                await mockApiClient.delete(`${endpoint}${recordId}/`);
+                await apiClient.delete(`${endpoint}${recordId}/`);
                 
-                if (fetchData) {
-                    await fetchData();
-                } else {
-                    // Update local state
-                    switch (endpoint) {
-                        case '/j1939/standard-files/':
-                            setStandardFiles(prev => prev.filter(item => item.id !== recordId));
-                            break;
-                        case '/j1939/auxiliary-files/':
-                            setAuxiliaryFiles(prev => prev.filter(item => item.id !== recordId));
-                            break;
-                        case '/j1939/categories/':
-                            setCategories(prev => prev.filter(item => item.id !== recordId));
-                            break;
-                        case '/j1939/pgns/':
-                            setPgns(prev => prev.filter(item => item.id !== recordId));
-                            break;
-                        case '/j1939/spns/':
-                            setSpns(prev => prev.filter(item => item.id !== recordId));
-                            break;
-                    }
+                switch (endpoint) {
+                    case '/j1939/standard-files/':
+                        setStandardFiles(prev => prev.filter(item => item.id !== recordId));
+                        break;
+                    case '/j1939/auxiliary-files/':
+                        setAuxiliaryFiles(prev => prev.filter(item => item.id !== recordId));
+                        break;
+                    case '/j1939/categories/':
+                        setCategories(prev => prev.filter(item => item.id !== recordId));
+                        break;
+                    case '/j1939/pgns/':
+                        setPgns(prev => prev.filter(item => item.id !== recordId));
+                        break;
+                    case '/j1939/spns/':
+                        setSpns(prev => prev.filter(item => item.id !== recordId));
+                        break;
                 }
                 
                 showConfirmationPopup(successMessage);
@@ -407,14 +641,25 @@ export default function J1939ManagementSystem() {
     // Standard Files Management
     const handleAddStandardFile = async (e) => {
         e.preventDefault();
+
+        // Frontend validation to avoid 400s
+        if (!standardForm.file) {
+            setError('Please select a file before submitting.');
+            return;
+        }
+        if (!standardForm.Issued_Date) {
+            setError('Issued Date is required.');
+            return;
+        }
+
         await handleAddRecord(
             '/j1939/standard-files/',
             standardForm,
             () => setStandardForm({
                 Standard_No: '', Standard_Name: '', Issued_Date: '', Revised_Date: '', 
-                Resource: '', File: null, Note: ''
+                Resource: '', file: null, Note: ''
             }),
-            fetchStandardFiles,
+            null,
             'Standard file added successfully!'
         );
         setShowStandardModal(false);
@@ -428,9 +673,9 @@ export default function J1939ManagementSystem() {
             selectedRecord.id,
             () => setStandardForm({
                 Standard_No: '', Standard_Name: '', Issued_Date: '', Revised_Date: '', 
-                Resource: '', File: null, Note: ''
+                Resource: '', file: null, Note: ''
             }),
-            fetchStandardFiles,
+            null,
             'Standard file updated successfully!'
         );
         setShowStandardModal(false);
@@ -445,9 +690,9 @@ export default function J1939ManagementSystem() {
             auxiliaryForm,
             () => setAuxiliaryForm({
                 Title: '', Description: '', Published_Date: '', Resource: '', 
-                File: null, Linked_Standard: ''
+                file: null, Linked_Standard: ''
             }),
-            null, // Don't refetch, update local state directly
+            null,
             'Auxiliary file added successfully!'
         );
         setShowAuxiliaryModal(false);
@@ -460,7 +705,7 @@ export default function J1939ManagementSystem() {
             '/j1939/categories/',
             categoryForm,
             () => setCategoryForm({ Keyword_EN: '', Keyword_CH: '' }),
-            null, // Don't refetch, update local state directly
+            null,
             'Category added successfully!'
         );
         setShowCategoryModal(false);
@@ -473,7 +718,7 @@ export default function J1939ManagementSystem() {
             categoryForm,
             selectedRecord.id,
             () => setCategoryForm({ Keyword_EN: '', Keyword_CH: '' }),
-            null, // Don't refetch, update local state directly
+            null,
             'Category updated successfully!'
         );
         setShowCategoryModal(false);
@@ -489,7 +734,7 @@ export default function J1939ManagementSystem() {
             () => setPgnForm({
                 PGN_Number: '', Name_Description: '', Category: '', Linked_Standard: ''
             }),
-            null, // Don't refetch, update local state directly
+            null,
             'PGN added successfully!'
         );
         setShowPgnModal(false);
@@ -504,7 +749,7 @@ export default function J1939ManagementSystem() {
             () => setSpnForm({
                 SPN_Number: '', Name_Description: '', Linked_PGN: '', Category: '', Linked_Auxiliary: ''
             }),
-            null, // Don't refetch, update local state directly
+            null,
             'SPN added successfully!'
         );
         setShowSpnModal(false);
@@ -514,7 +759,6 @@ export default function J1939ManagementSystem() {
         alert(message);
     };
 
-    // Filter data based on search
     const filteredStandardFiles = standardFiles.filter(item => {
         return searchTerm === '' || 
             item.Standard_No?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -621,7 +865,7 @@ export default function J1939ManagementSystem() {
                                     setSelectedRecord(null);
                                     setStandardForm({
                                         Standard_No: '', Standard_Name: '', Issued_Date: '', Revised_Date: '', 
-                                        Resource: '', File: null, Note: ''
+                                        Resource: '', file: null, Note: ''
                                     });
                                     setShowStandardModal(true);
                                 }}
@@ -655,6 +899,9 @@ export default function J1939ManagementSystem() {
                                                 Standard Name
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                File
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Issued Date
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -674,6 +921,23 @@ export default function J1939ManagementSystem() {
                                                 <td className="px-6 py-4 text-sm text-gray-500">
                                                     {file.Standard_Name}
                                                 </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {file.File ? (
+                                                        <div className="flex items-center space-x-2">
+                                                            {getFileIcon(file.File.type)}
+                                                            <div>
+                                                                <div className="text-sm font-medium text-gray-900">
+                                                                    {file.File.name}
+                                                                </div>
+                                                                <div className="text-xs text-gray-500">
+                                                                    {FILE_EXTENSIONS[file.File.type] || 'File'} • {file.File.size}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-sm text-gray-400">No file</span>
+                                                    )}
+                                                </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {file.Issued_Date}
                                                 </td>
@@ -681,16 +945,22 @@ export default function J1939ManagementSystem() {
                                                     {file.Revised_Date}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedRecord(file);
-                                                            // Show detail view or modal
-                                                            alert(`Standard File Details:\n\nNumber: ${file.Standard_No}\nName: ${file.Standard_Name}\nIssued: ${file.Issued_Date}\nRevised: ${file.Revised_Date}\nResource: ${file.Resource}\nNote: ${file.Note}`);
-                                                        }}
-                                                        className="text-blue-600 hover:text-blue-900"
-                                                    >
-                                                        View
-                                                    </button>
+                                                    {file.File && (
+                                                        <button
+                                                            onClick={() => handleViewFile(file.File)}
+                                                            className="text-blue-600 hover:text-blue-900"
+                                                        >
+                                                            View File
+                                                        </button>
+                                                    )}
+                                                    {file.File && (
+                                                        <button
+                                                            onClick={() => handleDownloadFile(file.File)}
+                                                            className="text-green-600 hover:text-green-900"
+                                                        >
+                                                            Download
+                                                        </button>
+                                                    )}
                                                     <button
                                                         onClick={() => {
                                                             setSelectedRecord(file);
@@ -700,12 +970,12 @@ export default function J1939ManagementSystem() {
                                                                 Issued_Date: file.Issued_Date,
                                                                 Revised_Date: file.Revised_Date,
                                                                 Resource: file.Resource,
-                                                                File: file.File,
+                                                                file: null,
                                                                 Note: file.Note
                                                             });
                                                             setShowStandardModal(true);
                                                         }}
-                                                        className="text-green-600 hover:text-green-900"
+                                                        className="text-yellow-600 hover:text-yellow-900"
                                                     >
                                                         Edit
                                                     </button>
@@ -713,7 +983,6 @@ export default function J1939ManagementSystem() {
                                                         onClick={() => handleDeleteRecord(
                                                             '/j1939/standard-files/',
                                                             file.id,
-                                                            null,
                                                             'Standard file deleted successfully!'
                                                         )}
                                                         className="text-red-600 hover:text-red-900"
@@ -730,7 +999,6 @@ export default function J1939ManagementSystem() {
                     </div>
                 )}
 
-                {/* Other modules remain the same as in the previous code */}
                 {/* Auxiliary Files Module */}
                 {activeModule === 'auxiliary-files' && (
                     <div className="bg-white rounded-lg shadow-sm border">
@@ -741,7 +1009,7 @@ export default function J1939ManagementSystem() {
                                     setSelectedRecord(null);
                                     setAuxiliaryForm({
                                         Title: '', Description: '', Published_Date: '', Resource: '', 
-                                        File: null, Linked_Standard: ''
+                                        file: null, Linked_Standard: ''
                                     });
                                     setShowAuxiliaryModal(true);
                                 }}
@@ -757,6 +1025,9 @@ export default function J1939ManagementSystem() {
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Title
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            File
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Linked Standard
@@ -775,20 +1046,75 @@ export default function J1939ManagementSystem() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                 {file.Title}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {standardFiles.find(std => std.id === file.Linked_Standard)?.Standard_No || 'N/A'}
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {file.File ? (
+                                                    <div className="flex items-center space-x-2">
+                                                        {getFileIcon(file.File.type)}
+                                                        <div>
+                                                            <div className="text-sm font-medium text-gray-900">
+                                                                {file.File.name}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">
+                                                                {FILE_EXTENSIONS[file.File.type] || 'File'} • {file.File.size}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-sm text-gray-400">No file</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                {file.Linked_Standard ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                            📎 {standardFiles.find(std => std.id === file.Linked_Standard)?.Standard_No}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400 text-xs">Not linked</span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {file.Published_Date}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                                <button className="text-blue-600 hover:text-blue-900">View</button>
-                                                <button className="text-green-600 hover:text-green-900">Edit</button>
-                                                <button 
+                                                {file.File && (
+                                                    <button
+                                                        onClick={() => handleViewFile(file.File)}
+                                                        className="text-blue-600 hover:text-blue-900"
+                                                    >
+                                                        View File
+                                                    </button>
+                                                )}
+                                                {file.File && (
+                                                    <button
+                                                        onClick={() => handleDownloadFile(file.File)}
+                                                        className="text-green-600 hover:text-green-900"
+                                                    >
+                                                        Download
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedRecord(file);
+                                                        setAuxiliaryForm({
+                                                            Title: file.Title,
+                                                            Description: file.Description,
+                                                            Published_Date: file.Published_Date,
+                                                            Resource: file.Resource,
+                                                            file: null,
+                                                            Linked_Standard: file.Linked_Standard || ''
+                                                        });
+                                                        setShowAuxiliaryModal(true);
+                                                    }}
+                                                    className="text-yellow-600 hover:text-yellow-900"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
                                                     onClick={() => handleDeleteRecord(
                                                         '/j1939/auxiliary-files/',
                                                         file.id,
-                                                        null,
                                                         'Auxiliary file deleted successfully!'
                                                     )}
                                                     className="text-red-600 hover:text-red-900"
@@ -863,7 +1189,6 @@ export default function J1939ManagementSystem() {
                                                     onClick={() => handleDeleteRecord(
                                                         '/j1939/categories/',
                                                         category.id,
-                                                        null,
                                                         'Category deleted successfully!'
                                                     )}
                                                     className="text-red-600 hover:text-red-900"
@@ -934,7 +1259,6 @@ export default function J1939ManagementSystem() {
                                                     onClick={() => handleDeleteRecord(
                                                         '/j1939/pgns/',
                                                         pgn.id,
-                                                        null,
                                                         'PGN deleted successfully!'
                                                     )}
                                                     className="text-red-600 hover:text-red-900"
@@ -1011,7 +1335,6 @@ export default function J1939ManagementSystem() {
                                                     onClick={() => handleDeleteRecord(
                                                         '/j1939/spns/',
                                                         spn.id,
-                                                        null,
                                                         'SPN deleted successfully!'
                                                     )}
                                                     className="text-red-600 hover:text-red-900"
@@ -1079,7 +1402,6 @@ export default function J1939ManagementSystem() {
                 )}
             </div>
 
-            {/* Modals remain the same as in the previous code */}
             {/* Standard File Modal */}
             {showStandardModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1115,22 +1437,20 @@ export default function J1939ManagementSystem() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Issued Date</label>
-                                    <input
-                                        type="date"
-                                        name="Issued_Date"
+                                    <CalendarPicker
                                         value={standardForm.Issued_Date}
                                         onChange={handleInputChange(standardForm, setStandardForm)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        name="Issued_Date"
+                                        placeholder="Select issued date"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Revised Date</label>
-                                    <input
-                                        type="date"
-                                        name="Revised_Date"
+                                    <CalendarPicker
                                         value={standardForm.Revised_Date}
                                         onChange={handleInputChange(standardForm, setStandardForm)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        name="Revised_Date"
+                                        placeholder="Select revised date"
                                     />
                                 </div>
                                 <div className="md:col-span-2">
@@ -1145,13 +1465,34 @@ export default function J1939ManagementSystem() {
                                     />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Upload File</label>
-                                    <input
-                                        type="file"
-                                        name="File"
-                                        onChange={handleInputChange(standardForm, setStandardForm)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    />
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Upload File (PDF, XLSX, DOCX, ZIP, CSV) - Max 10MB
+                                    </label>
+                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                                        <input
+                                            type="file"
+                                            name="file"
+                                            onChange={handleInputChange(standardForm, setStandardForm)}
+                                            accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.csv"
+                                            className="w-full px-3 py-2"
+                                        />
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            Allowed formats: PDF, XLS/XLSX, DOC/DOCX, ZIP, CSV
+                                        </p>
+                                        {standardForm.file && (
+                                            <div className="mt-2 p-2 bg-blue-50 rounded">
+                                                <div className="flex items-center">
+                                                    {getFileIcon(standardForm.file.type)}
+                                                    <div className="ml-2">
+                                                        <p className="text-sm font-medium">{standardForm.file.name}</p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {(standardForm.file.size / 1024 / 1024).toFixed(2)} MB
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Notes / Comments</label>
@@ -1185,13 +1526,305 @@ export default function J1939ManagementSystem() {
                 </div>
             )}
 
-            {/* Other modals (Auxiliary, Category, PGN, SPN) remain the same */}
+            {/* Auxiliary File Modal */}
+            {showAuxiliaryModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold">
+                                {selectedRecord ? 'Edit Auxiliary File' : 'Add New Auxiliary File'}
+                            </h3>
+                            <button
+                                onClick={() => setShowAuxiliaryModal(false)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            handleUpdateRecord(
+                                '/j1939/auxiliary-files/',
+                                auxiliaryForm,
+                                selectedRecord?.id,
+                                () => setAuxiliaryForm({
+                                    Title: '', Description: '', Published_Date: '', Resource: '', 
+                                    file: null, Linked_Standard: ''
+                                }),
+                                fetchAuxiliaryFiles,
+                                'Auxiliary file ' + (selectedRecord ? 'updated' : 'added') + ' successfully!'
+                            );
+                            setShowAuxiliaryModal(false);
+                        }}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                    <input
+                                        type="text"
+                                        name="Title"
+                                        value={auxiliaryForm.Title}
+                                        onChange={handleInputChange(auxiliaryForm, setAuxiliaryForm)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        placeholder="Auxiliary file title"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Published Date</label>
+                                    <CalendarPicker
+                                        value={auxiliaryForm.Published_Date}
+                                        onChange={handleInputChange(auxiliaryForm, setAuxiliaryForm)}
+                                        name="Published_Date"
+                                        placeholder="Select published date"
+                                    />
+                                </div>
+                                
+                                {/* LINKING SELECTOR */}
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Link to Standard File</label>
+                                    <div className="flex gap-2">
+                                        <select
+                                            name="Linked_Standard"
+                                            value={auxiliaryForm.Linked_Standard}
+                                            onChange={(e) => {
+                                                setAuxiliaryForm(prev => ({
+                                                    ...prev,
+                                                    Linked_Standard: e.target.value ? parseInt(e.target.value) : ''
+                                                }));
+                                            }}
+                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="">-- No Link --</option>
+                                            {standardFiles.map((std) => (
+                                                <option key={std.id} value={std.id}>
+                                                    {std.Standard_No} - {std.Standard_Name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {auxiliaryForm.Linked_Standard && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setAuxiliaryForm(prev => ({...prev, Linked_Standard: ''}));
+                                                }}
+                                                className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                                            >
+                                                Unlink
+                                            </button>
+                                        )}
+                                    </div>
+                                    {auxiliaryForm.Linked_Standard && (
+                                        <div className="mt-2 p-2 bg-blue-50 rounded">
+                                            <p className="text-sm text-blue-800">
+                                                📎 Linked to: {standardFiles.find(s => s.id === auxiliaryForm.Linked_Standard)?.Standard_No}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                    <textarea
+                                        name="Description"
+                                        value={auxiliaryForm.Description}
+                                        onChange={handleInputChange(auxiliaryForm, setAuxiliaryForm)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        rows="3"
+                                        placeholder="Detailed description of this auxiliary file"
+                                    />
+                                </div>
+                                
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Resource URL (optional)</label>
+                                    <input
+                                        type="url"
+                                        name="Resource"
+                                        value={auxiliaryForm.Resource}
+                                        onChange={handleInputChange(auxiliaryForm, setAuxiliaryForm)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        placeholder="https://example.com/resource"
+                                    />
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Upload File</label>
+                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                                        <input
+                                            type="file"
+                                            name="file"
+                                            onChange={handleInputChange(auxiliaryForm, setAuxiliaryForm)}
+                                            accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.csv"
+                                            className="w-full px-3 py-2"
+                                        />
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            Allowed formats: PDF, XLS/XLSX, DOC/DOCX, ZIP, CSV - Max 10MB
+                                        </p>
+                                        {auxiliaryForm.file && (
+                                            <div className="mt-2 p-2 bg-blue-50 rounded">
+                                                <div className="flex items-center">
+                                                    {getFileIcon(auxiliaryForm.file.type)}
+                                                    <div className="ml-2">
+                                                        <p className="text-sm font-medium">{auxiliaryForm.file.name}</p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {(auxiliaryForm.file.size / 1024 / 1024).toFixed(2)} MB
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="submit"
+                                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    {selectedRecord ? 'Update Auxiliary File' : 'Add Auxiliary File'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAuxiliaryModal(false)}
+                                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* File Preview Modal */}
+            {showFilePreview && previewFile && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold">File Preview</h3>
+                            <button
+                                onClick={() => setShowFilePreview(false)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div className="mb-6">
+                            <div className="flex items-center space-x-3 mb-4">
+                                {getFileIcon(previewFile.type)}
+                                <div>
+                                    <h4 className="text-lg font-medium">{previewFile.name}</h4>
+                                    <div className="text-sm text-gray-500">
+                                        <span className="mr-3">Type: {FILE_EXTENSIONS[previewFile.type] || previewFile.type}</span>
+                                        <span className="mr-3">Size: {previewFile.size}</span>
+                                        {previewFile.uploaded_date && (
+                                            <span>Uploaded: {previewFile.uploaded_date}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="border rounded-lg p-4 bg-gray-50">
+                                <div className="flex space-x-4">
+                                    <button
+                                        onClick={() => handleDownloadFile(previewFile)}
+                                        className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center"
+                                    >
+                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        Download File
+                                    </button>
+                                    <button
+                                        onClick={() => setShowFilePreview(false)}
+                                        className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                                
+                                {previewFile.type === 'application/pdf' && (
+                                    <div className="mt-4">
+                                        <div className="text-sm text-gray-600 mb-2">PDF Preview (Mock - In real app would show actual PDF)</div>
+                                        <div className="border rounded p-8 bg-white text-center">
+                                            <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                            </svg>
+                                            <p className="text-lg font-medium">{previewFile.name}</p>
+                                            <p className="text-gray-600">This is a mock preview. In a real application, this would display the actual PDF content.</p>
+                                            <p className="text-sm text-gray-500 mt-2">File size: {previewFile.size}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {(previewFile.type.includes('spreadsheet') || previewFile.type.includes('excel')) && (
+                                    <div className="mt-4">
+                                        <div className="text-sm text-gray-600 mb-2">Spreadsheet Preview</div>
+                                        <div className="border rounded p-8 bg-white text-center">
+                                            <svg className="w-16 h-16 text-green-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                            </svg>
+                                            <p className="text-lg font-medium">{previewFile.name}</p>
+                                            <p className="text-gray-600">Excel/Spreadsheet file ready for download.</p>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {previewFile.type.includes('word') && (
+                                    <div className="mt-4">
+                                        <div className="text-sm text-gray-600 mb-2">Document Preview</div>
+                                        <div className="border rounded p-8 bg-white text-center">
+                                            <svg className="w-16 h-16 text-blue-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                            </svg>
+                                            <p className="text-lg font-medium">{previewFile.name}</p>
+                                            <p className="text-gray-600">Word document ready for download.</p>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {(previewFile.type.includes('zip') || previewFile.type.includes('compressed')) && (
+                                    <div className="mt-4">
+                                        <div className="text-sm text-gray-600 mb-2">Archive File</div>
+                                        <div className="border rounded p-8 bg-white text-center">
+                                            <svg className="w-16 h-16 text-yellow-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                            </svg>
+                                            <p className="text-lg font-medium">{previewFile.name}</p>
+                                            <p className="text-gray-600">ZIP archive containing multiple files.</p>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {previewFile.type.includes('csv') && (
+                                    <div className="mt-4">
+                                        <div className="text-sm text-gray-600 mb-2">CSV Data File</div>
+                                        <div className="border rounded p-8 bg-white text-center">
+                                            <svg className="w-16 h-16 text-purple-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                            </svg>
+                                            <p className="text-lg font-medium">{previewFile.name}</p>
+                                            <p className="text-gray-600">Comma-separated values data file.</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Confirmation Modal */}
             {showConfirmation && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-sm">
-                        <h3 className="text-lg font-semibold mb-4 text-green-600">Confirm Action</h3>
-                        <p className="text-gray-600 mb-6">Are you sure you want to perform this action?</p>
+                        <h3 className="text-lg font-semibold mb-4 text-red-600">Confirm Deletion</h3>
+                        <p className="text-gray-600 mb-6">Are you sure you want to delete this record? This action cannot be undone.</p>
                         <div className="flex gap-3">
                             <button
                                 onClick={async () => {
@@ -1201,9 +1834,9 @@ export default function J1939ManagementSystem() {
                                     setShowConfirmation(false);
                                     setConfirmationAction(null);
                                 }}
-                                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
                             >
-                                Confirm
+                                Delete
                             </button>
                             <button
                                 onClick={() => {
@@ -1220,4 +1853,4 @@ export default function J1939ManagementSystem() {
             )}
         </div>
     );
-}
+} 

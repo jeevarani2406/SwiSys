@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { GraduationCap, Building, MapPin, Users, BookOpen, Award, Calendar, Star, ChevronLeft, ChevronRight, X, ExternalLink } from 'lucide-react';
+import { GraduationCap, Building, MapPin, Users, BookOpen, Award, Calendar, Star, ChevronLeft, ChevronRight, X, ExternalLink, Navigation } from 'lucide-react';
 
 export default function SuccessfulStory({ language }) {
     const [selectedCollege, setSelectedCollege] = useState(null);
@@ -16,20 +16,25 @@ export default function SuccessfulStory({ language }) {
             name: 'Karpagam Academy of Higher Education',
             shortName: 'Karpagam University',
             location: 'Coimbatore',
+            mapLink: 'https://maps.google.com/?q=Karpagam+Academy+of+Higher+Education,Coimbatore',
+            coordinates: { lat: 10.9980, lng: 76.9623 },
             descriptionEn: 'Leading university in Coimbatore established under Section 3 of UGC Act 1956, accredited with A+ Grade by NAAC. Prof. Jing-Jou Tang delivered an inspiring speech on Recent Trends in Vehicle Electronics during the Freshers\' Program inauguration on 24 October 2019.',
             descriptionZh: '哥印拜陀的領先大學，根據 UGC 法案第 3 條成立，獲得 NAAC A+ 等級認證。唐敬柔教授於 2019 年 10 月 24 日在新生計劃開幕式上就車輛電子最新趨勢發表了鼓舞人心的演講。',
             images: [
                 '/Picture1.jpg',
                 '/Picture2.jpg',
                 '/Picture3.jpg',
-                '/Picture4.jpg'
+                '/Picture4.jpg',
+                '/Picture25.jpg',
+                '/Picture26.jpg',
+                '/Picture27.jpg', 
+                '/Picture36.jpeg', 
+                '/Picture38.jpeg' 
             ],
-            
             years: '2018-Present',
             projects: 12,
             testimonialEn: 'Prof. Jing-Jou Tang\'s lecture on Recent Trends in Vehicle Electronics provided valuable knowledge to our newly joined students, motivating them to explore automotive technologies and emphasizing continuous learning and innovation.',
             testimonialZh: '唐敬柔教授關於車輛電子最新趨勢的講座為我們的新生提供了寶貴的知識，激勵他們探索汽車技術，並強調持續學習和創新。',
-            testimonialAuthor: 'Dr. Rajesh Kumar, Head of Electronics Department',
             specialEvent: {
                 date: '24 October 2019',
                 guest: 'Prof. Jing-Jou Tang from Southern Taiwan University of Science and Technology, Taiwan',
@@ -42,7 +47,8 @@ export default function SuccessfulStory({ language }) {
                     'OBDII diagnostic systems', 
                     'SAE J1939 standards',
                     'Automotive embedded systems',
-                    'Industry-oriented research'
+                    'Industry-oriented research',
+                    'Real-time practical experience for Karpagam students using a J1939-based data logging system from heavy-duty vehicles through internships'
                 ],
                 focusZh: [
                     'CAN 總線通信協議',
@@ -50,7 +56,8 @@ export default function SuccessfulStory({ language }) {
                     'OBDII 診斷系統',
                     'SAE J1939 標準',
                     '汽車嵌入式系統',
-                    '行業導向研究'
+                    '行業導向研究',
+                    '透過實習為 Karpagam 學生提供基於重型車輛 J1939 數據記錄系統的即時實務經驗'
                 ]
             }
         },
@@ -59,6 +66,8 @@ export default function SuccessfulStory({ language }) {
             name: 'College of Engineering, Guindy',
             shortName: 'CEG Campus, Anna University',
             location: 'Chennai',
+            mapLink: 'https://maps.google.com/?q=College+of+Engineering+Guindy,Chennai',
+            coordinates: { lat: 13.0105, lng: 80.2294 },
             descriptionEn: 'One of the oldest engineering colleges in India with strong automotive engineering programs. Prof. Jing-Jou Tang delivered a comprehensive lecture on vehicle electronics to students and faculty members on 22 October 2019.',
             descriptionZh: '印度最古老的工程學院之一，擁有強大的汽車工程項目。唐敬柔教授於 2019 年 10 月 22 日向師生就車輛電子學進行了全面講座。',
             images: [
@@ -71,7 +80,6 @@ export default function SuccessfulStory({ language }) {
             projects: 8,
             testimonialEn: 'Prof. Jing-Jou Tang\'s session on Recent Trends in Vehicle Electronics provided valuable insights into advanced automotive communication standards and their applications in vehicle diagnostics and intelligent transportation systems.',
             testimonialZh: '唐敬柔教授關於車輛電子最新趨勢的講座為先進汽車通信標準及其在車輛診斷和智能交通系統中的應用提供了寶貴的見解。',
-            testimonialAuthor: 'Prof. Sanjay Patel, Automotive Engineering',
             specialEvent: {
                 date: '22 October 2019',
                 guest: 'Prof. Jing-Jou Tang from Southern Taiwan University of Science and Technology, Taiwan',
@@ -101,6 +109,8 @@ export default function SuccessfulStory({ language }) {
             name: 'Madras Institute of Technology',
             shortName: 'MIT Campus, Anna University',
             location: 'Chennai',
+            mapLink: 'https://maps.google.com/?q=Madras+Institute+of+Technology,Chennai',
+            coordinates: { lat: 13.0115, lng: 80.2356 },
             descriptionEn: 'Premier institute for technology education with focus on automotive electronics and embedded systems. Prof. Jing-Jou Tang conducted a detailed seminar bridging electronics and automotive engineering disciplines on 23 October 2019.',
             descriptionZh: '技術教育的頂尖機構，專注於汽車電子和嵌入式系統。唐敬柔教授於 2019 年 10 月 23 日舉辦了詳細的研討會，連接電子與汽車工程學科。',
             images: [
@@ -113,7 +123,6 @@ export default function SuccessfulStory({ language }) {
             projects: 6,
             testimonialEn: 'Prof. Jing-Jou Tang\'s detailed seminar on Recent Trends in Vehicle Electronics effectively bridged knowledge between electronics and automotive engineering disciplines, highlighting industrial applications of CAN Bus, LIN Bus, OBDII, and SAE J1939 protocols.',
             testimonialZh: '唐敬柔教授關於車輛電子最新趨勢的詳細研討會有效地連接了電子與汽車工程學科之間的知識，突出了 CAN 總線、LIN 總線、OBDII 和 SAE J1939 協議的工業應用。',
-            testimonialAuthor: 'Dr. Priya Sharma, Embedded Systems Department',
             specialEvent: {
                 date: '23 October 2019',
                 guest: 'Prof. Jing-Jou Tang from Southern Taiwan University of Science and Technology, Taiwan',
@@ -143,6 +152,8 @@ export default function SuccessfulStory({ language }) {
             name: 'Indian Institute of Technology Madras',
             shortName: 'IIT Madras',
             location: 'Chennai',
+            mapLink: 'https://maps.google.com/?q=IIT+Madras,Chennai',
+            coordinates: { lat: 12.9915, lng: 80.2337 },
             descriptionEn: 'Premier technical institute with advanced research in automotive design and engineering. Our partnership focuses on cutting-edge automotive communication technologies.',
             descriptionZh: '頂尖技術機構，在汽車設計和工程方面進行先進研究。我們的合作專注於尖端汽車通信技術。',
             images: [
@@ -154,14 +165,15 @@ export default function SuccessfulStory({ language }) {
             years: '2021-Present',
             projects: 5,
             testimonialEn: 'SwiSys has been an excellent industry partner, bringing practical automotive communication expertise to our advanced research projects.',
-            testimonialZh: 'SwiSys 一直是一個優秀的行業合作夥伴，為我們的高級研究項目帶來了實用的汽車通信專業知識。',
-            testimonialAuthor: 'Prof. Arjun Mehta, Engineering Design'
+            testimonialZh: 'SwiSys 一直是一個優秀的行業合作夥伴，為我們的高級研究項目帶來了實用的汽車通信專業知識。'
         },
         {
             id: 5,
             name: 'Vel Tech Rangarajan Dr. Sagunthala R&D Institute',
             shortName: 'Vel Tech University',
             location: 'Chennai',
+            mapLink: 'https://maps.google.com/?q=Vel+Tech+University,Chennai',
+            coordinates: { lat: 13.0391, lng: 80.1789 },
             descriptionEn: 'Innovative university with strong focus on research and development in automotive technologies. Our collaboration has resulted in several patented technologies.',
             descriptionZh: '創新大學，專注於汽車技術的研發。我們的合作產生了多項專利技術。',
             images: [
@@ -173,27 +185,60 @@ export default function SuccessfulStory({ language }) {
             years: '2019-Present',
             projects: 7,
             testimonialEn: 'The industry-academia collaboration with SwiSys has accelerated our research in connected vehicle technologies.',
-            testimonialZh: '與 SwiSys 的產學合作加速了我們在連接車輛技術方面的研究。',
-            testimonialAuthor: 'Dr. Suresh Reddy, R&D Head'
+            testimonialZh: '與 SwiSys 的產學合作加速了我們在連接車輛技術方面的研究。'
         },
         {
             id: 6,
-            name: 'Chennai Institude of Technology',
+            name: 'Chennai Institute of Technology',
             shortName: 'CIT',
             location: 'Chennai',
-            descriptionEn: 'Innovative university with strong focus on research and development in automotive technologies. Our collaboration has resulted in several patented technologies.',
-            descriptionZh: '創新大學，專注於汽車技術的研發。我們的合作產生了多項專利技術。',
+            mapLink: 'https://maps.google.com/?q=Chennai+Institute+of+Technology,Chennai',
+            coordinates: { lat: 12.9239, lng: 80.0925 },
+            descriptionEn: 'Innovative university with strong focus on research and development in automotive technologies. Our collaboration has resulted in several patented technologies. Prof. Jing-Jou Tang delivered an inspiring speech on Recent Trends in Vehicle Electronics during the technical workshop on 25 October 2019.',
+            descriptionZh: '創新大學，專注於汽車技術的研發。我們的合作產生了多項專利技術。唐敬柔教授於 2019 年 10 月 25 日在技術研討會上就車輛電子最新趨勢發表了鼓舞人心的演講。',
             images: [
                 '/Picture21.jpg',
                 '/Picture22.jpg',
                 '/Picture23.jpg',
-                '/Picture24.jpg'
+                '/Picture24.jpg',
+                '/Picture28.jpg',
+                '/Picture29.jpg',
+                '/Picture30.jpg',
+                '/Picture31.jpg',
+                '/Picture32.jpg',
+                '/Picture33.jpg',
+                '/Picture34.jpg',
+                '/Picture35.jpg',
             ],
             years: '2019-Present',
-            projects: 7,
-            testimonialEn: 'The industry-academia collaboration with SwiSys has accelerated our research in connected vehicle technologies.',
-            testimonialZh: '與 SwiSys 的產學合作加速了我們在連接車輛技術方面的研究。',
-            testimonialAuthor: 'Dr. Suresh Reddy, R&D Head'
+            projects: 9,
+            testimonialEn: 'The industry-academia collaboration with SwiSys has accelerated our research in connected vehicle technologies. Prof. Tang\'s workshop provided valuable hands-on experience with CAN Bus and J1939 protocols.',
+            testimonialZh: '與 SwiSys 的產學合作加速了我們在連接車輛技術方面的研究。唐教授的研討會為 CAN 總線和 J1939 協議提供了寶貴的實踐經驗。',
+            specialEvent: {
+                date: '25 October 2019',
+                guest: 'Prof. Jing-Jou Tang from Southern Taiwan University of Science and Technology, Taiwan',
+                event: 'Technical Workshop on Automotive Communication Protocols',
+                topicEn: 'Hands-on Training on CAN Bus, LIN Bus, OBDII, and SAE J1939 Protocols',
+                topicZh: 'CAN 總線、LIN 總線、OBDII 和 SAE J1939 協議實踐培訓',
+                focusEn: [
+                    'Practical CAN Bus implementation',
+                    'LIN Bus system design',
+                    'OBDII diagnostic tools usage',
+                    'SAE J1939 heavy vehicle protocols',
+                    'Real-time data logging systems',
+                    'Automotive embedded programming',
+                    'Industry-grade development kits for CIT students'
+                ],
+                focusZh: [
+                    '實際 CAN 總線實施',
+                    'LIN 總線系統設計',
+                    'OBDII 診斷工具使用',
+                    'SAE J1939 重型車輛協議',
+                    '即時數據記錄系統',
+                    '汽車嵌入式編程',
+                    '為 CIT 學生提供工業級開發套件'
+                ]
+            }
         }
     ];
 
@@ -324,6 +369,10 @@ export default function SuccessfulStory({ language }) {
     const prevImage = () => {
         const item = selectedCollege || selectedIndustry;
         setCurrentImageIndex((prev) => (prev - 1 + item.images.length) % item.images.length);
+    };
+
+    const openGoogleMaps = (mapLink) => {
+        window.open(mapLink, '_blank', 'noopener,noreferrer');
     };
 
     const currentItem = selectedCollege || selectedIndustry;
@@ -485,7 +534,7 @@ export default function SuccessfulStory({ language }) {
                     {/* Enhanced Detail Modal */}
                     {currentItem && (
                         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-3xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
+                            <div className="bg-white rounded-3xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-y-auto">
                                 {/* Header */}
                                 <div className={`p-8 text-white ${selectedCollege ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-green-500 to-green-600'}`}>
                                     <div className="flex justify-between items-start mb-6">
@@ -496,10 +545,21 @@ export default function SuccessfulStory({ language }) {
                                             <div>
                                                 <h2 className="text-3xl font-bold mb-2">{currentItem.name}</h2>
                                                 <p className="text-xl opacity-90 mb-1">{currentItem.shortName}</p>
-                                                <p className="opacity-90 flex items-center">
+                                                <div className="flex items-center">
                                                     <MapPin className="h-5 w-5 mr-2" />
-                                                    {currentItem.location}
-                                                </p>
+                                                    <span className="opacity-90 mr-4">{currentItem.location}</span>
+                                                    {currentItem.mapLink && (
+                                                        <button
+                                                            onClick={() => openGoogleMaps(currentItem.mapLink)}
+                                                            className="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg transition-all duration-300 hover:scale-105"
+                                                        >
+                                                            <Navigation className="h-4 w-4" />
+                                                            <span className="text-sm">
+                                                                {language === 'en' ? 'Open in Maps' : '在地圖中打開'}
+                                                            </span>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                         <button
@@ -509,93 +569,192 @@ export default function SuccessfulStory({ language }) {
                                             <X className="h-6 w-6" />
                                         </button>
                                     </div>
-
-                                    {/* Image Gallery */}
-                                    <div className="relative rounded-xl overflow-hidden">
-                                        <img
-                                            src={currentItem.images[currentImageIndex]}
-                                            alt={currentItem.name}
-                                            className="w-full h-96 object-cover"
-                                        />
-                                        {currentItem.images.length > 1 && (
-                                            <>
-                                                <button
-                                                    onClick={prevImage}
-                                                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-all duration-300"
-                                                >
-                                                    <ChevronLeft className="h-6 w-6" />
-                                                </button>
-                                                <button
-                                                    onClick={nextImage}
-                                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-all duration-300"
-                                                >
-                                                    <ChevronRight className="h-6 w-6" />
-                                                </button>
-                                                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                                                    {currentItem.images.map((_, index) => (
-                                                        <button
-                                                            key={index}
-                                                            onClick={() => setCurrentImageIndex(index)}
-                                                            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                                                                index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                                                            }`}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
                                 </div>
 
-                                {/* Content */}
+                                {/* Content - Two Column Layout */}
                                 <div className="p-8">
-                                    <div className="grid lg:grid-cols-3 gap-8">
-                                        {/* Main Description */}
-                                        <div className="lg:col-span-3">
-                                            <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                                                <BookOpen className="h-6 w-6 mr-3 text-blue-600" />
-                                                {language === 'en' ? 'Partnership Overview' : '合作概覽'}
-                                            </h3>
-                                            <p className="text-gray-600 text-lg leading-relaxed mb-8">
-                                                {language === 'en' ? currentItem.descriptionEn : currentItem.descriptionZh}
-                                            </p>
+                                    <div className="grid lg:grid-cols-2 gap-8">
+                                        {/* Left Column - Images */}
+                                        <div className="space-y-6">
+                                            {/* Main Image Gallery */}
+                                            <div className="relative rounded-2xl overflow-hidden bg-gray-100">
+                                                <div className="w-full h-96 flex items-center justify-center">
+                                                    <img
+                                                        src={currentItem.images[currentImageIndex]}
+                                                        alt={`${currentItem.name} - Image ${currentImageIndex + 1}`}
+                                                        className="max-w-full max-h-full object-contain"
+                                                        onError={(e) => {
+                                                            e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
+                                                            e.target.className = 'w-full h-96 object-cover';
+                                                        }}
+                                                    />
+                                                </div>
+                                                {currentItem.images.length > 1 && (
+                                                    <>
+                                                        <button
+                                                            onClick={prevImage}
+                                                            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
+                                                        >
+                                                            <ChevronLeft className="h-6 w-6" />
+                                                        </button>
+                                                        <button
+                                                            onClick={nextImage}
+                                                            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
+                                                        >
+                                                            <ChevronRight className="h-6 w-6" />
+                                                        </button>
+                                                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                                                            {currentItem.images.map((_, index) => (
+                                                                <button
+                                                                    key={index}
+                                                                    onClick={() => setCurrentImageIndex(index)}
+                                                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                                                                        index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                                                                    }`}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                        <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                                                            {currentImageIndex + 1} / {currentItem.images.length}
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            {/* Gallery Section - Updated for both Karpagam and CIT */}
+                                            {selectedCollege && currentItem.images && (
+                                                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
+                                                    <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                                        <Star className="h-5 w-5 mr-2 text-blue-600" />
+                                                        {language === 'en' ? 'Collaboration Gallery' : '合作圖庫'}
+                                                    </h3>
+                                                    <div className={`grid gap-4 ${
+                                                        currentItem.id === 1 || currentItem.id === 6 ? 'grid-cols-3' : 'grid-cols-2'
+                                                    }`}>
+                                                        {currentItem.images.map((image, index) => (
+                                                            <div 
+                                                                key={index} 
+                                                                className="relative group cursor-pointer"
+                                                                onClick={() => setCurrentImageIndex(index)}
+                                                            >
+                                                                <img
+                                                                    src={image}
+                                                                    alt={`${currentItem.name} - ${index + 1}`}
+                                                                    className={`w-full ${
+                                                                        currentItem.id === 1 || currentItem.id === 6 ? 'h-28' : 'h-32'
+                                                                    } object-cover rounded-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg`}
+                                                                    onError={(e) => {
+                                                                        e.target.src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                                                                    }}
+                                                                />
+                                                                <div className={`absolute inset-0 rounded-lg transition-all duration-300 ${
+                                                                    index === currentImageIndex 
+                                                                        ? 'border-2 border-blue-500 bg-blue-500/20' 
+                                                                        : 'border border-gray-300 group-hover:border-blue-400'
+                                                                }`}></div>
+                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center">
+                                                                    <span className="text-white text-sm font-medium">
+                                                                        {language === 'en' ? 'View' : '查看'}
+                                                                    </span>
+                                                                </div>
+                                                                {/* Image number badge */}
+                                                                <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                                                                    {index + 1}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    {/* Special note for Karpagam and CIT showing all images */}
+                                                    {(currentItem.id === 1 || currentItem.id === 6) && (
+                                                        <div className="mt-4 text-center">
+                                                            <p className="text-sm text-blue-600 font-medium">
+                                                                {language === 'en' 
+                                                                    ? `Showing all ${currentItem.images.length} collaboration images from the special event` 
+                                                                    : `顯示特別活動的所有${currentItem.images.length}張合作圖片`
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Right Column - Content */}
+                                        <div className="space-y-6">
+                                            {/* Partnership Overview */}
+                                            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                                                    <BookOpen className="h-6 w-6 mr-3 text-blue-600" />
+                                                    {language === 'en' ? 'Partnership Overview' : '合作概覽'}
+                                                </h3>
+                                                <p className="text-gray-600 leading-relaxed mb-6">
+                                                    {language === 'en' ? currentItem.descriptionEn : currentItem.descriptionZh}
+                                                </p>
+
+                                                {/* Stats Section */}
+                                                <div className="grid grid-cols-3 gap-4 mb-6">
+                                                    <div className="bg-white p-4 rounded-xl text-center border border-blue-200">
+                                                        <div className="text-2xl font-bold text-blue-600 mb-1">{currentItem.projects}</div>
+                                                        <div className="text-sm text-gray-700 font-medium">
+                                                            {language === 'en' ? 'Projects' : '項目'}
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-white p-4 rounded-xl text-center border border-blue-200">
+                                                        <div className="text-lg font-bold text-green-600 mb-1">{currentItem.years}</div>
+                                                        <div className="text-sm text-gray-700 font-medium">
+                                                            {language === 'en' ? 'Duration' : '時長'}
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-white p-4 rounded-xl text-center border border-blue-200">
+                                                        <div className="text-2xl font-bold text-purple-600 mb-1">
+                                                            {selectedCollege ? 'A+' : '★★★★★'}
+                                                        </div>
+                                                        <div className="text-sm text-gray-700 font-medium">
+                                                            {language === 'en' ? 'Rating' : '評級'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
                                             {/* Special Event Section for Academy Partners */}
                                             {selectedCollege && currentItem.specialEvent && (
-                                                <div className="mb-8 bg-gradient-to-r from-purple-50 to-blue-50 p-6 rounded-2xl border border-purple-200">
+                                                <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-6 border border-purple-200">
                                                     <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                                                         <Award className="h-5 w-5 mr-2 text-purple-600" />
                                                         {language === 'en' ? 'Special Collaboration Event' : '特別合作活動'}
                                                     </h4>
                                                     <div className="space-y-4">
-                                                        <div className="grid md:grid-cols-2 gap-4 mb-4">
-                                                            <div className="bg-white p-4 rounded-xl border border-purple-100">
-                                                                <div className="font-semibold text-purple-700 mb-1">
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="bg-white p-3 rounded-lg border border-purple-100">
+                                                                <div className="font-semibold text-purple-700 text-sm mb-1">
                                                                     {language === 'en' ? 'Event Date' : '活動日期'}
                                                                 </div>
                                                                 <div className="text-gray-700">{currentItem.specialEvent.date}</div>
                                                             </div>
-                                                            <div className="bg-white p-4 rounded-xl border border-purple-100">
-                                                                <div className="font-semibold text-purple-700 mb-1">
-                                                                    {language === 'en' ? 'Distinguished Guest' : '特邀嘉賓'}
+                                                            <div className="bg-white p-3 rounded-lg border border-purple-100">
+                                                                <div className="font-semibold text-purple-700 text-sm mb-1">
+                                                                    {language === 'en' ? 'Guest Speaker' : '特邀嘉賓'}
                                                                 </div>
-                                                                <div className="text-gray-700">{currentItem.specialEvent.guest}</div>
+                                                                <div className="text-gray-700 text-sm">{currentItem.specialEvent.guest}</div>
                                                             </div>
                                                         </div>
                                                         
-                                                        <div className="bg-white p-4 rounded-xl border border-purple-100">
+                                                        <div className="bg-white p-4 rounded-lg border border-purple-100">
                                                             <div className="font-semibold text-purple-700 mb-2">
                                                                 {language === 'en' ? 'Event Details' : '活動詳情'}
                                                             </div>
                                                             <p className="text-gray-700 mb-3">
-                                                                <strong>{currentItem.specialEvent.event}</strong> - {language === 'en' ? currentItem.specialEvent.topicEn : currentItem.specialEvent.topicZh}
+                                                                <strong>{currentItem.specialEvent.event}</strong>
+                                                            </p>
+                                                            <p className="text-gray-600 text-sm mb-4">
+                                                                {language === 'en' ? currentItem.specialEvent.topicEn : currentItem.specialEvent.topicZh}
                                                             </p>
                                                             
-                                                            <div className="mt-3">
-                                                                <div className="font-semibold text-purple-700 mb-2">
+                                                            <div>
+                                                                <div className="font-semibold text-purple-700 mb-2 text-sm">
                                                                     {language === 'en' ? 'Key Focus Areas' : '重點關注領域'}
                                                                 </div>
-                                                                <div className="grid md:grid-cols-2 gap-2">
+                                                                <div className="grid gap-2">
                                                                     {(language === 'en' ? currentItem.specialEvent.focusEn : currentItem.specialEvent.focusZh).map((item, index) => (
                                                                         <div key={index} className="flex items-center text-sm">
                                                                             <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
@@ -610,13 +769,13 @@ export default function SuccessfulStory({ language }) {
                                             )}
 
                                             {/* Testimonial */}
-                                            <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-2xl border border-blue-100">
+                                            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
                                                 <div className="flex items-start">
                                                     <div className="text-blue-600 mr-4">
-                                                        <span className="text-4xl">"</span>
+                                                        <span className="text-3xl">"</span>
                                                     </div>
                                                     <div>
-                                                        <p className="text-gray-700 text-lg italic mb-4">
+                                                        <p className="text-gray-700 italic mb-4 leading-relaxed">
                                                             {language === 'en' ? currentItem.testimonialEn : currentItem.testimonialZh}
                                                         </p>
                                                         <p className="text-gray-600 font-semibold">{currentItem.testimonialAuthor}</p>

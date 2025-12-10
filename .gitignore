@@ -1,3 +1,88 @@
-*.pyc
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+ENV/
+env/
 
-.config/
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/media/
+/staticfiles/
+*.pot
+*.mo
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.next/
+out/
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Documentation
+*.md.bak
+docs/_build/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Media files (keep structure but ignore content)
+/media/j1939_uploads/**/*
+!/media/j1939_uploads/.gitkeep
+/media/standard_files/**/*
+!/media/standard_files/.gitkeep
+/media/auxiliary_files/**/*
+!/media/auxiliary_files/.gitkeep
+
+# Database
+*.sqlite3
+*.db
+
+# Build artifacts
+*.pyc
+*.pyo
+*.pyd
+
