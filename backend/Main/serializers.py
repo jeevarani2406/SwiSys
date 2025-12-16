@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Vehicle, SPN, PGN, VehicleSPN, VehiclePGN, StandardFile, AuxiliaryFile, Category
+from .models import Vehicle, SPN, PGN, VehicleSPN, VehiclePGN, StandardFile, AuxiliaryFile, Category, J1939ParameterDefinition
 
 
 class VehicleSerializer(serializers.ModelSerializer):
@@ -63,6 +63,56 @@ class AuxiliaryFileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'Title', 'Description', 'Published_Date', 'Resource', 
             'File', 'Linked_Standard', 'Linked_Standard_No', 'Category', 
-            'created_at', 'updated_at'
+            'Note', 'uploaded_by', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class J1939ParameterDefinitionSerializer(serializers.ModelSerializer):
+    """Serializer for J1939 Parameter Definitions"""
+    standard_reference_name = serializers.CharField(
+        source='Standard_Reference.Standard_No', 
+        read_only=True,
+        allow_null=True
+    )
+    
+    class Meta:
+        model = J1939ParameterDefinition
+        fields = [
+            'SPN_Number', 'PGN_DEC', 'PGN_HEX', 'SPN_Description', 'Unit',
+            'Data_Length_Bytes', 'Start_Byte', 'Start_Bit', 'Bit_Length',
+            'Resolution', 'Offset', 'Min_Value', 'Max_Value',
+            'Standard_Reference', 'standard_reference_name',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class SPNDecodeRequestSerializer(serializers.Serializer):
+    """Serializer for SPN decode requests"""
+    spn_number = serializers.IntegerField(help_text='SPN number to decode')
+    raw_data = serializers.ListField(
+        child=serializers.IntegerField(min_value=0, max_value=255),
+        min_length=8,
+        max_length=8,
+        help_text='8 bytes of raw CAN message data'
+    )
+
+
+class SPNDecodeResponseSerializer(serializers.Serializer):
+    """Serializer for SPN decode responses"""
+    spn = serializers.IntegerField()
+    description = serializers.CharField()
+    physical_value = serializers.FloatField(allow_null=True)
+    unit = serializers.CharField()
+    status = serializers.CharField()
+    raw_value = serializers.IntegerField(allow_null=True)
+    message = serializers.CharField(required=False, allow_null=True)
+
+
+class UniqueSPNCountSerializer(serializers.Serializer):
+    """Serializer for unique SPN count response"""
+    count = serializers.IntegerField()
+    unique_spns = serializers.ListField(child=serializers.IntegerField())
+    spn_details = serializers.ListField(child=serializers.DictField())
+    spn_occurrences = serializers.DictField()

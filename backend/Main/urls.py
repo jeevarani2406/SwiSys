@@ -3,7 +3,12 @@ from .views import (
     J1939UploadView, VehicleListView, VehicleSpnsView, SpnVehiclesView, UploadAPIView,
     StandardFileListView, StandardFileDetailView, AuxiliaryFileListView, AuxiliaryFileDetailView,
     CategoryListView, CategoryDetailView, PGNListView, SPNListView,
-    analyze_j1939_files  # new
+    analyze_j1939_files,
+    # J1939 Parameter Definition views
+    J1939ParameterDefinitionListView, J1939ParameterDefinitionDetailView,
+    DecodeSPNValueView, UniqueSPNCountView, PGNSummaryView,
+    # New SPN mapping views
+    PGNToSPNMappingView, UploadSPNMasterView, AnalyzePGNsFromFileView
 )
 
 urlpatterns = [
@@ -32,4 +37,16 @@ urlpatterns = [
     # PGNs and SPNs list endpoints
     path('j1939/pgns/', PGNListView.as_view(), name='pgns-list'),
     path('j1939/spns/', SPNListView.as_view(), name='spns-list'),
+
+    # J1939 Parameter Definitions endpoints
+    path('j1939/parameter-definitions/', J1939ParameterDefinitionListView.as_view(), name='j1939-parameter-definitions-list'),
+    path('j1939/parameter-definitions/<int:SPN_Number>/', J1939ParameterDefinitionDetailView.as_view(), name='j1939-parameter-definitions-detail'),
+    path('j1939/decode-spn/', DecodeSPNValueView.as_view(), name='j1939-decode-spn'),
+    path('j1939/unique-spn-count/', UniqueSPNCountView.as_view(), name='j1939-unique-spn-count'),
+    path('j1939/pgn-summary/', PGNSummaryView.as_view(), name='j1939-pgn-summary'),
+    
+    # New PGN to SPN mapping endpoints
+    path('j1939/pgn-spn-mapping/', PGNToSPNMappingView.as_view(), name='j1939-pgn-spn-mapping'),
+    path('j1939/upload-spn-master/', UploadSPNMasterView.as_view(), name='j1939-upload-spn-master'),
+    path('j1939/analyze-pgns/', AnalyzePGNsFromFileView.as_view(), name='j1939-analyze-pgns'),
 ]

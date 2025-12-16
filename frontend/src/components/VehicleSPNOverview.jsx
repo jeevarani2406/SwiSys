@@ -34,12 +34,44 @@ export default function VehicleSPNOverview({ open, vehicle, onClose }) {
     let pgnList = [];
     let totalSpnCount = 0;
     
-    // Method 1: Check for pgnSpnMapping property
-    if (vehicleData.pgnSpnMapping && typeof vehicleData.pgnSpnMapping === 'object') {
+    // Method 1: Check for j1939_spn_details (NEW - primary method from backend)
+    if (vehicleData.j1939_spn_details && Array.isArray(vehicleData.j1939_spn_details) && vehicleData.j1939_spn_details.length > 0) {
+      // Group SPNs by their PGN
+      const groupedByPgn = {};
+      vehicleData.j1939_spn_details.forEach(spn => {
+        const pgnHex = spn.pgn_hex || spn.pgn || 'UNKNOWN';
+        if (!groupedByPgn[pgnHex]) {
+          groupedByPgn[pgnHex] = {
+            pgn_hex: pgnHex,
+            pgn_dec: parseInt(pgnHex, 16) || spn.pgn || 0,
+            name: `PGN ${pgnHex}`,
+            spn_count: 0,
+            spns: []
+          };
+        }
+        groupedByPgn[pgnHex].spns.push({
+          spn_number: spn.spn,
+          name: spn.description || `SPN ${spn.spn}`,
+          description: spn.description || '',
+          unit: spn.unit || '',
+          resolution: spn.resolution || 1,
+          offset: spn.offset || 0,
+          start_byte: spn.start_byte,
+          start_bit: spn.start_bit,
+          bit_length: spn.bit_length,
+          data_length_bytes: spn.data_length_bytes
+        });
+        groupedByPgn[pgnHex].spn_count += 1;
+      });
+      pgnList = Object.values(groupedByPgn);
+      totalSpnCount = vehicleData.j1939_unique_spn_count || vehicleData.j1939_spn_details.length;
+    }
+    // Method 2: Check for pgnSpnMapping property
+    else if (vehicleData.pgnSpnMapping && typeof vehicleData.pgnSpnMapping === 'object' && Object.keys(vehicleData.pgnSpnMapping).length > 0) {
       pgnList = Object.values(vehicleData.pgnSpnMapping);
       totalSpnCount = pgnList.reduce((sum, pgn) => sum + (pgn.spns?.length || 0), 0);
     }
-    // Method 2: Check for pgns array with nested spns
+    // Method 3: Check for pgns array with nested spns
     else if (vehicleData.pgns && Array.isArray(vehicleData.pgns)) {
       pgnList = vehicleData.pgns.map(pgn => ({
         pgn_hex: pgn.pgn_hex || pgn.pgn || '',
@@ -50,7 +82,7 @@ export default function VehicleSPNOverview({ open, vehicle, onClose }) {
       }));
       totalSpnCount = pgnList.reduce((sum, pgn) => sum + (pgn.spns?.length || 0), 0);
     }
-    // Method 3: If we have spns but no pgns, create a default mapping
+    // Method 4: If we have spns but no pgns, create a default mapping
     else if (vehicleData.spns && Array.isArray(vehicleData.spns)) {
       // Group SPNs by their PGN
       const groupedByPgn = {};
@@ -96,7 +128,15 @@ export default function VehicleSPNOverview({ open, vehicle, onClose }) {
 
   // Get SPN count safely
   const getTotalSpnCount = () => {
-    return spnCount || vehicle.spnCount || vehicle.spns?.length || 0;
+    return spnCount || vehicle.j1939_unique_spn_count || vehicle.spnCount || vehicle.spns?.length || vehicle.j1939_spn_details?.length || 0;
+  };
+
+  // Get SPNs array - prefer j1939_spn_details, fallback to spns
+  const getSpnsArray = () => {
+    if (vehicle.j1939_spn_details && vehicle.j1939_spn_details.length > 0) {
+      return vehicle.j1939_spn_details;
+    }
+    return vehicle.spns || [];
   };
 
   // Get PGN count safely
@@ -107,17 +147,70 @@ export default function VehicleSPNOverview({ open, vehicle, onClose }) {
   // Format bit range
   const formatBitRange = (spn) => {
     try {
-      const start = parseInt(spn.start_bit) || 0;
-      const width = parseInt(spn.bit_width) || 0;
-      return `${start}-${start + width}`;
+      const startBit = parseInt(spn.start_bit) || 0;
+      const bitLength = parseInt(spn.bit_length || spn.bit_width) || 1;
+      const endBit = startBit + bitLength - 1;
+      return `${startBit}-${endBit}`;
     } catch {
-      return '0-0';
+      return 'N/A';
+    }
+  };
+
+  // Helper function to convert PGN to different formats
+  const formatPgn = (pgnValue) => {
+    if (!pgnValue && pgnValue !== 0) return { hex: 'N/A', decimal: 'N/A', original: pgnValue };
+    
+    try {
+      const strValue = String(pgnValue).trim();
+      let hexValue = '';
+      let decimalValue = '';
+      
+      // Check if it's already in hex format
+      if (strValue.toLowerCase().startsWith('0x') || /[a-f]/i.test(strValue)) {
+        const cleanHex = strValue.replace(/^0x/i, '');
+        const decInt = parseInt(cleanHex, 16);
+        if (!isNaN(decInt)) {
+          hexValue = `0x${cleanHex.toUpperCase()}`;
+          decimalValue = decInt.toString();
+        } else {
+          hexValue = strValue;
+          decimalValue = strValue;
+        }
+      } 
+      // Check if it's a decimal number
+      else if (/^\d+$/.test(strValue)) {
+        const decInt = parseInt(strValue, 10);
+        if (!isNaN(decInt)) {
+          decimalValue = decInt.toString();
+          hexValue = `0x${decInt.toString(16).toUpperCase()}`;
+        } else {
+          decimalValue = strValue;
+          hexValue = strValue;
+        }
+      }
+      // If it's neither, return original
+      else {
+        hexValue = strValue;
+        decimalValue = strValue;
+      }
+      
+      return {
+        hex: hexValue,
+        decimal: decimalValue,
+        original: strValue
+      };
+    } catch (error) {
+      return {
+        hex: String(pgnValue),
+        decimal: String(pgnValue),
+        original: String(pgnValue)
+      };
     }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col">
         {/* Modal Header */}
         <div className="flex justify-between items-center p-6 border-b">
           <div>
@@ -187,81 +280,407 @@ export default function VehicleSPNOverview({ open, vehicle, onClose }) {
         {/* Modal Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {activeTab === 'spns' && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">All SPNs (J1939 Standard)</h3>
-                <span className="text-sm text-gray-500">
-                  Showing {vehicle.spns?.length || 0} SPN parameters
-                </span>
-              </div>
-              
-              {vehicle.spns && vehicle.spns.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4">
-                  {vehicle.spns.map((spn, index) => {
-                    const spnName = spn.name || spn.spn_name || `SPN_${index}`;
-                    const spnValue = spn.value || spn.physical_value || 'N/A';
-                    const spnDescription = spn.description || spn.parameter_name || 'No description';
-                    const spnUnit = spn.unit || '';
-                    const spnRawValue = spn.raw_value || 'N/A';
-                    const spnStartBit = spn.start_bit || 0;
-                    const spnBitWidth = spn.bit_width || 0;
-                    const spnFactor = spn.factor || 1;
-                    const spnOffset = spn.offset || 0;
-                    
-                    return (
-                      <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-gray-900">{spnName}</h4>
-                              {spn.pgn_hex && (
-                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                                  PGN: {spn.pgn_hex}
+            <div className="space-y-6">
+              {/* Combined PGN and SPN Display - Side by Side */}
+              <div className="grid grid-cols-2 gap-6">
+                {/* Left Column: PGNs */}
+                <div>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">All PGNs</h3>
+                    <p className="text-sm text-gray-600">
+                      Total: {vehicle.pgns?.length || 0} PGNs found
+                    </p>
+                  </div>
+                  
+                  {/* PGN(H) - Hexadecimal */}
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-700">PGN(H) - Hexadecimal Format</h4>
+                      <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">0xXXXX</span>
+                    </div>
+                    <div className="bg-white border border-blue-200 rounded-lg p-4 max-h-60 overflow-y-auto">
+                      <div className="flex flex-wrap gap-2">
+                        {vehicle.pgns && vehicle.pgns.length > 0 ? (
+                          vehicle.pgns.map((pgn, idx) => {
+                            const formatted = formatPgn(pgn.value || pgn.pgn || pgn);
+                            return (
+                              <div 
+                                key={idx} 
+                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                              >
+                                <span className="font-mono text-sm font-bold">
+                                  {formatted.hex}
                                 </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">{spnDescription}</p>
-                            
-                            <div className="grid grid-cols-4 gap-3 mt-3 text-xs text-gray-500">
-                              <div className="flex flex-col">
-                                <span className="font-medium text-gray-700">Bit Range</span>
-                                <span>{formatBitRange(spn)}</span>
+                                {pgn.description && (
+                                  <span className="text-xs text-blue-600 opacity-75 truncate max-w-xs">
+                                    {pgn.description}
+                                  </span>
+                                )}
                               </div>
-                              <div className="flex flex-col">
-                                <span className="font-medium text-gray-700">Bits</span>
-                                <span>{spnBitWidth}</span>
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="font-medium text-gray-700">Factor</span>
-                                <span>{spnFactor}</span>
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="font-medium text-gray-700">Offset</span>
-                                <span>{spnOffset}</span>
-                              </div>
-                            </div>
+                            );
+                          })
+                        ) : (
+                          <div className="w-full text-center py-8 text-gray-400">
+                            <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p>No PGN data available</p>
                           </div>
-                          
-                          <div className="text-right ml-4 min-w-[120px]">
-                            <div className="text-lg font-semibold text-blue-600 mb-1">
-                              {spnValue} {spnUnit}
-                            </div>
-                            <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                              Raw: {spnRawValue}
-                            </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PGN(D) - Decimal */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-700">PGN(D) - Decimal Format</h4>
+                      <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">Decimal</span>
+                    </div>
+                    <div className="bg-white border border-green-200 rounded-lg p-4 max-h-60 overflow-y-auto">
+                      <div className="flex flex-wrap gap-2">
+                        {vehicle.pgns && vehicle.pgns.length > 0 ? (
+                          vehicle.pgns.map((pgn, idx) => {
+                            const formatted = formatPgn(pgn.value || pgn.pgn || pgn);
+                            return (
+                              <div 
+                                key={idx} 
+                                className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+                              >
+                                <span className="font-mono text-sm font-bold">
+                                  {formatted.decimal}
+                                </span>
+                                {pgn.description && (
+                                  <span className="text-xs text-green-600 opacity-75 truncate max-w-xs">
+                                    {pgn.description}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="w-full text-center py-8 text-gray-400">
+                            <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p>No PGN data available</p>
                           </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PGN Statistics */}
+                  {vehicle.pgns && vehicle.pgns.length > 0 && (
+                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h4 className="text-sm font-medium text-blue-800 mb-2">PGN Statistics</h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-600">Total PGNs:</span>
+                          <span className="ml-2 font-medium">{vehicle.pgns.length}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Unique PGNs:</span>
+                          <span className="ml-2 font-medium">
+                            {new Set(vehicle.pgns.map(pgn => formatPgn(pgn.value || pgn.pgn || pgn).hex)).size}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Hex Range:</span>
+                          <span className="ml-2 font-mono text-xs">
+                            {vehicle.pgns.length > 0 ? 
+                              `${formatPgn(vehicle.pgns[0].value || vehicle.pgns[0].pgn || vehicle.pgns[0]).hex} to ${formatPgn(vehicle.pgns[vehicle.pgns.length - 1].value || vehicle.pgns[vehicle.pgns.length - 1].pgn || vehicle.pgns[vehicle.pgns.length - 1]).hex}` : 
+                              'N/A'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">With Descriptions:</span>
+                          <span className="ml-2 font-medium">
+                            {vehicle.pgns.filter(pgn => pgn.description).length}
+                          </span>
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="text-center py-12">
-                  <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No SPN Data Available</h3>
-                  <p className="text-gray-500">This vehicle doesn't have any SPN parameters to display.</p>
+
+                {/* Right Column: SPNs */}
+                <div>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">All SPNs (J1939 Standard)</h3>
+                    <div className="flex gap-3">
+                      <span className="text-sm bg-purple-100 text-purple-800 px-3 py-1 rounded-full font-medium">
+                        Total: {getTotalSpnCount()}
+                      </span>
+                      <span className="text-sm bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-medium">
+                        Unique: {(() => {
+                          const spns = getSpnsArray();
+                          return spns.length > 0 ? new Set(spns.map(spn => spn.spn || spn.spn_number || spn.name)).size : 0;
+                        })()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* All SPNs Row-wise Display */}
+                  {getSpnsArray().length > 0 && (
+                    <div className="mb-4 bg-white border rounded-lg overflow-hidden shadow-sm">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-purple-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-purple-800 uppercase tracking-wider w-16">
+                              SPN
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">
+                              All SPN Values (J1939)
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="hover:bg-purple-50">
+                            <td className="px-4 py-3 whitespace-nowrap align-top">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-purple-100 text-purple-800">
+                                SPN
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                                {getSpnsArray().map((spn, idx) => {
+                                  const spnNumber = spn.spn || spn.spn_number || spn.name || spn.spn_name || `SPN_${idx}`;
+                                  const spnDesc = spn.description || spn.parameter_name || '';
+                                  const pgnHex = spn.pgn_hex || spn.pgn || '';
+                                  
+                                  return (
+                                    <span 
+                                      key={idx} 
+                                      className="inline-flex items-center px-2 py-1 rounded text-xs bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 cursor-pointer"
+                                      title={`${spnNumber}: ${spnDesc}${pgnHex ? ` (PGN: ${pgnHex})` : ''}`}
+                                    >
+                                      <span className="font-mono font-bold">{spnNumber}</span>
+                                      {spnDesc && (
+                                        <span className="ml-1 text-purple-500 max-w-[120px] truncate">
+                                          - {spnDesc}
+                                        </span>
+                                      )}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* PGN → SPN Mapping Table */}
+                  {/* PGN → SPN Mapping Table - Show when we have SPN data */}
+                  {getSpnsArray().length > 0 && (
+                    <div className="mb-4 bg-white border rounded-lg overflow-hidden shadow-sm">
+                      <div className="bg-indigo-50 px-4 py-3 border-b">
+                        <h4 className="text-sm font-bold text-indigo-800 uppercase">PGN → SPN Mapping (J1939)</h4>
+                      </div>
+                      <div className="overflow-x-auto max-h-60 overflow-y-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50 sticky top-0">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-xs font-bold text-gray-700 uppercase w-24">PGN (H/D)</th>
+                              <th className="px-3 py-2 text-center text-xs font-bold text-gray-700 uppercase w-16">Count</th>
+                              <th className="px-3 py-2 text-left text-xs font-bold text-gray-700 uppercase">Associated SPNs</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {(() => {
+                              // Group SPNs by PGN
+                              const pgnSpnMap = new Map();
+                              const spnsArray = getSpnsArray();
+                              
+                              spnsArray.forEach(spn => {
+                                const pgnHex = spn.pgn_hex || spn.pgn || 'Unknown';
+                                if (!pgnSpnMap.has(pgnHex)) {
+                                  pgnSpnMap.set(pgnHex, []);
+                                }
+                                pgnSpnMap.get(pgnHex).push(spn);
+                              });
+                              
+                              return Array.from(pgnSpnMap.entries()).map(([pgnHex, spns], idx) => {
+                                let pgnDec = parseInt(pgnHex, 16);
+                                if (isNaN(pgnDec)) pgnDec = pgnHex;
+                                
+                                return (
+                                  <tr key={idx} className="hover:bg-gray-50">
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                      <div className="flex flex-col gap-0.5">
+                                        <span className="font-mono text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">{pgnHex}</span>
+                                        <span className="font-mono text-xs bg-green-50 text-green-700 px-1.5 py-0.5 rounded">{pgnDec}</span>
+                                      </div>
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">
+                                        {spns.length}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <div className="flex flex-wrap gap-1">
+                                        {spns.map((spn, spnIdx) => {
+                                          const spnNum = spn.spn || spn.spn_number || spn.name || spn.spn_name || `SPN_${spnIdx}`;
+                                          const spnDesc = spn.description || spn.parameter_name || '';
+                                          return (
+                                            <span 
+                                              key={spnIdx} 
+                                              className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-purple-50 text-purple-700 border border-purple-200"
+                                              title={spnDesc || spnNum}
+                                            >
+                                              <span className="font-mono font-bold">{spnNum}</span>
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              });
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SPN Detailed Table */}
+                  <div className="bg-white border rounded-lg overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">SPN</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Description</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Physical Value</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Units</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Bit Range</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {getSpnsArray().length > 0 ? (
+                            getSpnsArray().map((spn, index) => {
+                              const spnNumber = spn.spn || spn.spn_number || spn.name || spn.spn_name || `SPN_${index}`;
+                              const spnDescription = spn.description || spn.parameter_name || 'No description';
+                              const spnValue = spn.value || spn.physical_value || 'N/A';
+                              const spnUnit = spn.unit || '';
+                              const spnBitRange = formatBitRange(spn);
+                              
+                              return (
+                                <tr key={index} className="hover:bg-gray-50 transition-colors">
+                                  <td className="px-4 py-3 whitespace-nowrap">
+                                    <span className="font-mono font-bold text-purple-600">SPN {spnNumber}</span>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="text-sm text-gray-900 max-w-xs">
+                                      {spnDescription}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="text-sm font-medium text-green-700">
+                                      {spnValue}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    {spnUnit ? (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {spnUnit}
+                                      </span>
+                                    ) : (
+                                      <span className="text-sm text-gray-400">N/A</span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <span className="text-xs font-mono bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                      {spnBitRange}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          ) : (
+                            <tr>
+                              <td colSpan="5" className="px-4 py-8 text-center">
+                                <div className="flex flex-col items-center justify-center text-gray-400">
+                                  <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                  </svg>
+                                  <p className="text-lg font-medium">No SPN Data Available</p>
+                                  <p className="text-sm mt-1">This vehicle doesn't have any SPN parameters to display.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* SPN Statistics */}
+                  {getSpnsArray().length > 0 && (
+                    <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <h4 className="text-sm font-medium text-green-800 mb-2">SPN Statistics</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-600">Total SPNs:</span>
+                          <span className="ml-2 font-medium">{getSpnsArray().length}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Unique SPNs:</span>
+                          <span className="ml-2 font-medium">
+                            {new Set(getSpnsArray().map(spn => spn.spn || spn.spn_number || spn.name)).size}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">With Values:</span>
+                          <span className="ml-2 font-medium">
+                            {getSpnsArray().filter(spn => spn.value || spn.physical_value).length}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">With Units:</span>
+                          <span className="ml-2 font-medium">
+                            {getSpnsArray().filter(spn => spn.unit).length}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* SPN-PGN Relationship Summary */}
+              {getSpnsArray().length > 0 && (
+                <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">J1939 Analysis Summary</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600 mb-2">{pgnCount || vehicle.unique_pgn_count || vehicle.pgns?.length || 0}</div>
+                      <div className="text-sm font-medium text-gray-700">Parameter Groups (PGNs)</div>
+                      <div className="text-xs text-gray-500 mt-1">Organize SPNs by function</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600 mb-2">{getTotalSpnCount()}</div>
+                      <div className="text-sm font-medium text-gray-700">Signal Parameters (SPNs)</div>
+                      <div className="text-xs text-gray-500 mt-1">Individual measurement points</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-purple-600 mb-2">
+                        {getSpnsArray().filter(spn => spn.pgn_hex || spn.pgn).length}
+                      </div>
+                      <div className="text-sm font-medium text-gray-700">Mapped SPNs</div>
+                      <div className="text-xs text-gray-500 mt-1">SPNs associated with PGNs</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 text-sm text-gray-600">
+                    <p>
+                      This analysis shows {pgnCount || vehicle.unique_pgn_count || vehicle.pgns?.length || 0} PGNs and {getTotalSpnCount()} SPNs 
+                      extracted from the J1939 data file. PGNs group related SPNs together according to 
+                      SAE J1939 standards.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

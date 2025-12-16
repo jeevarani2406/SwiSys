@@ -18,9 +18,13 @@ from django.http import JsonResponse
 
 from openpyxl import load_workbook
 
-from .models import Vehicle, SPN, PGN, VehicleSPN, VehiclePGN, StandardFile, AuxiliaryFile, Category
+from .models import Vehicle, SPN, PGN, VehicleSPN, VehiclePGN, StandardFile, AuxiliaryFile, Category, J1939ParameterDefinition
 from rest_framework import generics
-from .serializers import VehicleSerializer, VehicleSPNSerializer, StandardFileSerializer, AuxiliaryFileSerializer, CategorySerializer, PGNSerializer, SPNSerializer
+from .serializers import (
+    VehicleSerializer, VehicleSPNSerializer, StandardFileSerializer, AuxiliaryFileSerializer, 
+    CategorySerializer, PGNSerializer, SPNSerializer, J1939ParameterDefinitionSerializer,
+    SPNDecodeRequestSerializer, SPNDecodeResponseSerializer
+)
 from django.db.models import Count
 from rest_framework.parsers import MultiPartParser, FormParser
 
@@ -97,15 +101,13 @@ class J1939UploadView(APIView):
         for f in files:
             fname = getattr(f, 'name', '<unknown>')
             logger.info('Processing file: %s', fname)
-
-            # Validate file type (allow .xlsx, .xls, .csv)
-            if not (isinstance(fname, str) and (fname.lower().endswith('.xlsx') or fname.lower().endswith('.xls') or fname.lower().endswith('.csv'))):
-                errors.append({
-                    'filename': fname,
-                    'error': 'Invalid file type. Only .xlsx, .xls and .csv files are allowed.'
-                })
-                logger.warning('Invalid file type: %s', fname)
-                continue
+            
+            # Initialize PGN count variables for this file
+            total_pgn_count = 0
+            unique_pgn_count = 0
+            unique_pgn_list = []
+            # All file types are now accepted - we'll detect the format automatically
+            # Files without extensions or unknown extensions will be treated as CSV/text
 
             try:
                 # Read file content
@@ -113,19 +115,85 @@ class J1939UploadView(APIView):
                 file_content = f.read()
                 f.seek(0)
 
-                # Parse file (Excel or CSV)
+                # Parse file (Excel or text-based)
                 try:
-                    if fname.lower().endswith('.csv'):
-                        # CSV: read as single-sheet structure
+                    # Only .xlsx and .xls are treated as Excel files
+                    # Everything else (including files without extensions) is treated as CSV/text
+                    excel_extensions = ('.xlsx', '.xls')
+                    is_excel_file = fname.lower().endswith(excel_extensions)
+                    
+                    if not is_excel_file:
+                        # CSV/TXT/LOG: read as single-sheet structure with multi-encoding support
                         f.seek(0)
+                        
+                        # Try multiple encodings for CSV files
+                        encodings_to_try = ['utf-8', 'utf-8-sig', 'gb2312', 'gbk', 'gb18030', 
+                                           'big5', 'utf-16', 'utf-16-le', 'latin1', 'cp1252', 'iso-8859-1']
+                        
+                        df = None
+                        decoded_text = None
+                        encoding_used = None
+                        
                         if pd is not None:
-                            df = pd.read_csv(io.BytesIO(file_content) if isinstance(file_content, (bytes, bytearray)) else io.StringIO(file_content))
+                            # Try pandas with multiple encodings
+                            for encoding in encodings_to_try:
+                                try:
+                                    df = pd.read_csv(io.BytesIO(file_content), encoding=encoding)
+                                    encoding_used = encoding
+                                    logger.info(f"CSV {fname} parsed successfully with encoding: {encoding}")
+                                    break
+                                except (UnicodeDecodeError, UnicodeError):
+                                    continue
+                                except Exception as enc_err:
+                                    # Try next encoding
+                                    continue
+                            
+                            # Last resort: use latin1 which accepts any byte
+                            if df is None:
+                                try:
+                                    df = pd.read_csv(io.BytesIO(file_content), encoding='latin1', on_bad_lines='skip')
+                                    encoding_used = 'latin1-fallback'
+                                    logger.info(f"CSV {fname} parsed with latin1 fallback")
+                                except Exception as final_err:
+                                    logger.error(f"All encoding attempts failed for {fname}: {final_err}")
+                                    raise
+                            
+                            # Calculate PGN counts using pandas (matching the exact Python logic)
+                            # Filter for main message rows where Index is not NaN
+                            total_pgn_count = 0
+                            unique_pgn_count = 0
+                            unique_pgn_list = []
+                            
+                            if df is not None and 'Index' in df.columns and 'PGN(H)' in df.columns:
+                                # Filter for rows where Index is not NaN (main message rows only)
+                                message_df = df[df['Index'].notna()]
+                                # Total: count of non-null PGN(H) values in filtered rows
+                                total_pgn_count = int(message_df['PGN(H)'].count())
+                                # Unique: count of distinct PGN(H) values
+                                unique_pgn_count = int(message_df['PGN(H)'].nunique())
+                                # Get list of unique PGN values
+                                unique_pgn_list = message_df['PGN(H)'].dropna().unique().tolist()
+                                unique_pgn_list = [str(x).upper() for x in unique_pgn_list if pd.notna(x)]
+                                logger.info(f"PGN counts for {fname}: Total={total_pgn_count}, Unique={unique_pgn_count}")
+                            
                             df_dict = {os.path.splitext(fname)[0]: df}
                         else:
-                            # Fallback CSV parser -> produce dict-like structure compatible with downstream code
-                            text = file_content.decode('utf-8', errors='ignore') if isinstance(file_content, (bytes, bytearray)) else str(file_content)
+                            # Fallback CSV parser with multi-encoding support
+                            for encoding in encodings_to_try:
+                                try:
+                                    decoded_text = file_content.decode(encoding)
+                                    encoding_used = encoding
+                                    break
+                                except (UnicodeDecodeError, UnicodeError):
+                                    continue
+                            
+                            # Final fallback
+                            if decoded_text is None:
+                                decoded_text = file_content.decode('latin1', errors='replace')
+                                encoding_used = 'latin1-fallback'
+                            
                             import csv as _csv
-                            rows = list(_csv.reader(text.splitlines()))
+                            rows = list(_csv.reader(decoded_text.splitlines()))
                             if not rows:
                                 df_dict = {os.path.splitext(fname)[0]: {}}
                             else:
@@ -136,10 +204,43 @@ class J1939UploadView(APIView):
                                     sheet_data[header] = [r[col_idx] if col_idx < len(r) else None for r in data_rows]
                                 df_dict = {os.path.splitext(fname)[0]: sheet_data}
                     else:
-                        # Excel file
+                        # Excel file (.xlsx, .xls)
                         if pd is not None:
                             # Use pandas for better Excel parsing
-                            df_dict = pd.read_excel(io.BytesIO(file_content), sheet_name=None, engine='openpyxl')
+                            # Try openpyxl first for .xlsx, xlrd for .xls
+                            try:
+                                if fname.lower().endswith('.xls') and not fname.lower().endswith('.xlsx'):
+                                    # Old .xls format - try xlrd engine
+                                    try:
+                                        df_dict = pd.read_excel(io.BytesIO(file_content), sheet_name=None, engine='xlrd')
+                                    except Exception:
+                                        # Fallback to openpyxl
+                                        df_dict = pd.read_excel(io.BytesIO(file_content), sheet_name=None, engine='openpyxl')
+                                else:
+                                    # .xlsx format
+                                    df_dict = pd.read_excel(io.BytesIO(file_content), sheet_name=None, engine='openpyxl')
+                                
+                                logger.info(f"Excel {fname} parsed successfully")
+                                
+                                # Calculate PGN counts for Excel files (same logic as CSV)
+                                for sheet_name, sheet_df in df_dict.items():
+                                    if sheet_df is not None and not sheet_df.empty:
+                                        if 'Index' in sheet_df.columns and 'PGN(H)' in sheet_df.columns:
+                                            # Filter for rows where Index is not NaN (main message rows only)
+                                            message_df = sheet_df[sheet_df['Index'].notna()]
+                                            # Total: count of non-null PGN(H) values in filtered rows
+                                            total_pgn_count = int(message_df['PGN(H)'].count())
+                                            # Unique: count of distinct PGN(H) values
+                                            unique_pgn_count = int(message_df['PGN(H)'].nunique())
+                                            # Get list of unique PGN values
+                                            unique_pgn_list = message_df['PGN(H)'].dropna().unique().tolist()
+                                            unique_pgn_list = [str(x).upper() for x in unique_pgn_list if pd.notna(x)]
+                                            logger.info(f"PGN counts for {fname} (sheet: {sheet_name}): Total={total_pgn_count}, Unique={unique_pgn_count}")
+                                            break  # Use first sheet with valid data
+                                            
+                            except Exception as excel_err:
+                                logger.error(f"Excel parsing error for {fname}: {excel_err}")
+                                raise
                         else:
                             # Fallback to openpyxl - convert to simple data structure
                             wb = load_workbook(filename=io.BytesIO(file_content), data_only=True)
@@ -253,10 +354,17 @@ class J1939UploadView(APIView):
                                 continue
 
                     # Extract PGNs and SPNs
+                    # Priority: 'PGN(H)' column for hex PGN values, then other aliases
+                    pgn_h_aliases = ['pgn(h)', 'pgn_h', 'pgn h', 'pgn(hex)', 'pgn_hex']
                     pgn_aliases = ['pgn', 'pgn number', 'pgn_no', 'pgn_number', 'parameter group number']
                     spn_aliases = ['spn', 'spn number', 'spn_no', 'spn_number', 'suspect parameter number']
+                    index_aliases = ['index', 'idx', 'no', 'no.', 'row', 'row_no']
 
                     # Find column indices/names
+                    index_col_idx = None  # For Index column to identify main message rows
+                    index_col_name = None
+                    pgn_h_col_idx = None  # For PGN(H) hex column
+                    pgn_h_col_name = None
                     pgn_col_idx = None
                     pgn_col_name = None
                     spn_col_idx = None
@@ -264,12 +372,22 @@ class J1939UploadView(APIView):
                     desc_col_idx = None
                     desc_col_name = None
 
+                    # Lists to track PGN(H) values for counting
+                    all_pgn_h_values = []  # All non-empty PGN(H) values (for total count)
+                    unique_pgn_h_values = set()  # Unique PGN(H) values
+
                     # Check header row
                     if is_dataframe:
                         columns = df.columns
                         for col_idx, col_name in enumerate(columns):
                             col_str = str(col_name).strip().lower()
-                            if any(alias in col_str for alias in pgn_aliases):
+                            # Check for Index column (to identify main message rows)
+                            if col_str in index_aliases or col_str == 'index':
+                                index_col_idx = col_idx
+                            # Check for PGN(H) column first (priority)
+                            if any(alias == col_str for alias in pgn_h_aliases):
+                                pgn_h_col_idx = col_idx
+                            elif any(alias in col_str for alias in pgn_aliases):
                                 pgn_col_idx = col_idx
                             if any(alias in col_str for alias in spn_aliases):
                                 spn_col_idx = col_idx
@@ -279,7 +397,13 @@ class J1939UploadView(APIView):
                         # For dict structure
                         for col_name in df.keys():
                             col_str = str(col_name).strip().lower()
-                            if any(alias in col_str for alias in pgn_aliases):
+                            # Check for Index column
+                            if col_str in index_aliases or col_str == 'index':
+                                index_col_name = col_name
+                            # Check for PGN(H) column first (priority)
+                            if any(alias == col_str for alias in pgn_h_aliases):
+                                pgn_h_col_name = col_name
+                            elif any(alias in col_str for alias in pgn_aliases):
                                 pgn_col_name = col_name
                             if any(alias in col_str for alias in spn_aliases):
                                 spn_col_name = col_name
@@ -293,37 +417,105 @@ class J1939UploadView(APIView):
                     for row_idx in range(num_rows):
                         try:
                             pgn_value = None
+                            pgn_h_value = None  # For PGN(H) hex value
                             spn_value = None
                             desc_value = ''
+                            
+                            # Check if this is a main message row (Index column has value)
+                            # In J1939 log files, only rows with Index value are main messages
+                            # Detail rows (SPNs) have NaN in the Index column
+                            is_main_message_row = True  # Default to True if no Index column
+                            
+                            if is_dataframe and index_col_idx is not None:
+                                try:
+                                    index_val = df.iloc[row_idx, index_col_idx]
+                                    is_main_message_row = pd is not None and pd.notna(index_val)
+                                except:
+                                    pass
+                            elif not is_dataframe and index_col_name and index_col_name in df:
+                                try:
+                                    index_val = df[index_col_name][row_idx] if row_idx < len(df[index_col_name]) else None
+                                    is_main_message_row = index_val is not None and str(index_val).strip().lower() not in ['', 'nan', 'none', 'null']
+                                except:
+                                    pass
 
-                            # Get PGN
+                            # Get PGN(H) - hex PGN column (priority)
+                            # Only count for PGN stats if this is a main message row
                             if is_dataframe:
-                                if pgn_col_idx is not None:
+                                if pgn_h_col_idx is not None:
                                     try:
-                                        pgn_val = df.iloc[row_idx, pgn_col_idx]
-                                        if pd is not None and pd.notna(pgn_val):
-                                            pgn_value = int(float(str(pgn_val)))
-                                            if 100 <= pgn_value <= 999999:
-                                                pgns.add(pgn_value)
-                                                current_pgn = pgn_value
-                                        elif pgn_val is not None:
-                                            pgn_value = int(float(str(pgn_val)))
-                                            if 100 <= pgn_value <= 999999:
-                                                pgns.add(pgn_value)
-                                                current_pgn = pgn_value
+                                        pgn_h_val = df.iloc[row_idx, pgn_h_col_idx]
+                                        if pd is not None and pd.notna(pgn_h_val):
+                                            pgn_h_str = str(pgn_h_val).strip().upper()
+                                            if pgn_h_str and pgn_h_str.lower() not in ['', 'nan', 'none', 'null', 'n/a', 'pgn(h)', 'pgn']:
+                                                # Only count PGN for stats if this is a main message row
+                                                if is_main_message_row:
+                                                    all_pgn_h_values.append(pgn_h_str)
+                                                    unique_pgn_h_values.add(pgn_h_str)
+                                                # Also convert to decimal for PGN set
+                                                try:
+                                                    pgn_dec = int(pgn_h_str, 16)
+                                                    if is_main_message_row:
+                                                        pgns.add(pgn_dec)
+                                                    current_pgn = pgn_dec
+                                                    pgn_value = pgn_dec
+                                                except ValueError:
+                                                    pass
                                     except:
                                         pass
                             else:
-                                if pgn_col_name and pgn_col_name in df:
+                                if pgn_h_col_name and pgn_h_col_name in df:
                                     try:
-                                        pgn_val = df[pgn_col_name][row_idx] if row_idx < len(df[pgn_col_name]) else None
-                                        if pgn_val is not None:
-                                            pgn_value = int(float(str(pgn_val)))
-                                            if 100 <= pgn_value <= 999999:
-                                                pgns.add(pgn_value)
-                                                current_pgn = pgn_value
+                                        pgn_h_val = df[pgn_h_col_name][row_idx] if row_idx < len(df[pgn_h_col_name]) else None
+                                        if pgn_h_val is not None:
+                                            pgn_h_str = str(pgn_h_val).strip().upper()
+                                            if pgn_h_str and pgn_h_str.lower() not in ['', 'nan', 'none', 'null', 'n/a', 'pgn(h)', 'pgn']:
+                                                if is_main_message_row:
+                                                    all_pgn_h_values.append(pgn_h_str)
+                                                    unique_pgn_h_values.add(pgn_h_str)
+                                                try:
+                                                    pgn_dec = int(pgn_h_str, 16)
+                                                    if is_main_message_row:
+                                                        pgns.add(pgn_dec)
+                                                    current_pgn = pgn_dec
+                                                    pgn_value = pgn_dec
+                                                except ValueError:
+                                                    pass
                                     except:
                                         pass
+
+                            # Get PGN (decimal column, fallback if no PGN(H))
+                            if pgn_value is None:
+                                if is_dataframe:
+                                    if pgn_col_idx is not None:
+                                        try:
+                                            pgn_val = df.iloc[row_idx, pgn_col_idx]
+                                            if pd is not None and pd.notna(pgn_val):
+                                                pgn_value = int(float(str(pgn_val)))
+                                                if 100 <= pgn_value <= 999999:
+                                                    if is_main_message_row:
+                                                        pgns.add(pgn_value)
+                                                    current_pgn = pgn_value
+                                            elif pgn_val is not None:
+                                                pgn_value = int(float(str(pgn_val)))
+                                                if 100 <= pgn_value <= 999999:
+                                                    if is_main_message_row:
+                                                        pgns.add(pgn_value)
+                                                    current_pgn = pgn_value
+                                        except:
+                                            pass
+                                else:
+                                    if pgn_col_name and pgn_col_name in df:
+                                        try:
+                                            pgn_val = df[pgn_col_name][row_idx] if row_idx < len(df[pgn_col_name]) else None
+                                            if pgn_val is not None:
+                                                pgn_value = int(float(str(pgn_val)))
+                                                if 100 <= pgn_value <= 999999:
+                                                    if is_main_message_row:
+                                                        pgns.add(pgn_value)
+                                                    current_pgn = pgn_value
+                                        except:
+                                            pass
 
                             # Get SPN
                             if is_dataframe:
@@ -468,6 +660,38 @@ class J1939UploadView(APIView):
                         logger.error('Error creating SPN %d: %s', spn_num, str(spn_exc))
                         continue
 
+                # Map PGNs to SPNs from J1939ParameterDefinition table (J1939 Standard)
+                j1939_mapped_spns = set()
+                j1939_spn_details = []
+                
+                # Get all available PGNs from J1939ParameterDefinition for comparison
+                available_pgns = set(J1939ParameterDefinition.objects.values_list('PGN_DEC', flat=True).distinct())
+                matching_pgns = set(vehicle_pgns) & available_pgns
+                logger.info('SPN Mapping: %d vehicle PGNs, %d in DB, %d matching', 
+                           len(vehicle_pgns), len(available_pgns), len(matching_pgns))
+                
+                for pgn_num in vehicle_pgns:
+                    # Get all SPNs defined for this PGN in the J1939 standard
+                    spn_definitions = J1939ParameterDefinition.objects.filter(PGN_DEC=pgn_num)
+                    for spn_def in spn_definitions:
+                        j1939_mapped_spns.add(spn_def.SPN_Number)
+                        j1939_spn_details.append({
+                            'pgn': pgn_num,
+                            'pgn_hex': spn_def.PGN_HEX,
+                            'spn': spn_def.SPN_Number,
+                            'description': spn_def.SPN_Description,
+                            'unit': spn_def.Unit,
+                            'resolution': float(spn_def.Resolution) if spn_def.Resolution else None,
+                            'offset': float(spn_def.Offset) if spn_def.Offset else 0,
+                            'start_byte': spn_def.Start_Byte,
+                            'start_bit': spn_def.Start_Bit,
+                            'bit_length': spn_def.Bit_Length,
+                            'data_length_bytes': spn_def.Data_Length_Bytes
+                        })
+                
+                logger.info('SPN Mapping Result: %d unique SPNs found from %d matching PGNs', 
+                           len(j1939_mapped_spns), len(matching_pgns))
+
                 # Build response data
                 vehicles.append({
                     'id': vehicle.id,
@@ -475,11 +699,21 @@ class J1939UploadView(APIView):
                     'brand': vehicle.brand,
                     'source_file': vehicle.source_file,
                     'pgns': vehicle_pgns,
-                    'spns': vehicle_spns
+                    'spns': vehicle_spns,
+                    'pgn_count': len(vehicle_pgns),
+                    'spn_count': len(vehicle_spns),
+                    # PGN(H) column stats - calculated from pandas filtering by Index column
+                    'total_pgn_messages': total_pgn_count,
+                    'unique_pgn_count': unique_pgn_count,
+                    'unique_pgn_list': unique_pgn_list,
+                    # J1939 Standard SPN mapping (based on PGNs in file)
+                    'j1939_unique_spn_count': len(j1939_mapped_spns),
+                    'j1939_spn_list': sorted(list(j1939_mapped_spns)),
+                    'j1939_spn_details': j1939_spn_details
                 })
 
-                logger.info('Successfully processed file %s: Vehicle=%s, PGNs=%d, SPNs=%d',
-                           fname, vehicle.name, len(vehicle_pgns), len(vehicle_spns))
+                logger.info('Successfully processed file %s: Vehicle=%s, Total PGN Messages=%d, Unique PGNs=%d',
+                           fname, vehicle.name, total_pgn_count, unique_pgn_count)
 
             except Exception as exc:
                 error_msg = f'Error processing file: {str(exc)}'
@@ -489,12 +723,29 @@ class J1939UploadView(APIView):
                 })
                 logger.error('Exception processing %s: %s', fname, str(exc), exc_info=True)
 
+        # Calculate aggregate totals across all vehicles
+        total_pgn_messages_all = sum(v.get('total_pgn_messages', 0) for v in vehicles)
+        all_unique_pgns = set()
+        all_j1939_unique_spns = set()
+        for v in vehicles:
+            all_unique_pgns.update(v.get('unique_pgn_list', []))
+            all_j1939_unique_spns.update(v.get('j1939_spn_list', []))
+
         # Build response - always return "success" status if request was processed
         # Errors are reported in the errors array
         response_data = {
             'status': 'success',
             'vehicles': vehicles,
-            'errors': errors
+            'errors': errors,
+            'totals': {
+                'total_vehicles': len(vehicles),
+                'total_pgn_messages': total_pgn_messages_all,  # Sum of all PGN messages across all files
+                'unique_pgn_count': len(all_unique_pgns),       # Total unique PGNs across all files
+                'unique_pgn_list': sorted(list(all_unique_pgns)),
+                # J1939 Standard SPN totals (mapped from PGNs)
+                'j1939_unique_spn_count': len(all_j1939_unique_spns),
+                'j1939_spn_list': sorted(list(all_j1939_unique_spns))
+            }
         }
 
         # Return 200 OK even if there are errors, as long as the request was processed
@@ -725,12 +976,28 @@ class VehicleListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        vehicles = Vehicle.objects.all()
+        vehicles = Vehicle.objects.select_related('uploaded_by').all().order_by('-upload_date')
         out = []
         for v in vehicles:
             pgn_count = VehiclePGN.objects.filter(vehicle=v).count()
             spn_count = VehicleSPN.objects.filter(vehicle=v).count()
-            out.append({'id': v.id, 'name': v.name, 'brand': v.brand, 'pgns': pgn_count, 'spns': spn_count})
+            # Get uploader name
+            uploaded_by_name = None
+            if v.uploaded_by:
+                uploaded_by_name = f"{v.uploaded_by.first_name} {v.uploaded_by.last_name}".strip()
+                if not uploaded_by_name:
+                    uploaded_by_name = v.uploaded_by.username
+            out.append({
+                'id': v.id, 
+                'name': v.name, 
+                'brand': v.brand, 
+                'source_file': v.source_file,
+                'pgns': pgn_count, 
+                'spns': spn_count,
+                'uploaded_by': v.uploaded_by.id if v.uploaded_by else None,
+                'uploaded_by_name': uploaded_by_name,
+                'upload_date': v.upload_date.isoformat() if v.upload_date else None
+            })
         return Response(out)
 
 
@@ -956,228 +1223,417 @@ def summarize_pgns_with_map(pgn_list, j1939_map):
 
 
 # ---------------------------------------------------------------------------
-# CSV-based J1939 analysis (optional endpoint)
+# J1939 Data Log File Analysis with Robust Encoding Detection
 # Parses uploaded CSVs, maps PGNs/SPNs, and returns aggregates.
 # ---------------------------------------------------------------------------
+
+def detect_encoding_and_read(file_content):
+    """
+    Detect encoding and read file content.
+    Try multiple encodings in order of likelihood.
+    Returns tuple: (decoded_text, encoding_used, errors_list)
+    """
+    encodings_to_try = ['utf-8', 'utf-8-sig', 'utf-16', 'utf-16-le', 'utf-16-be', 
+                        'gb2312', 'gbk', 'gb18030', 'big5', 'latin1', 'cp1252', 
+                        'iso-8859-1', 'ascii']
+    
+    errors_list = []
+    
+    for encoding in encodings_to_try:
+        try:
+            decoded = file_content.decode(encoding)
+            # Verify it's readable text (has reasonable characters)
+            if decoded and len(decoded) > 0:
+                # Check if it contains mostly printable characters
+                printable_ratio = sum(1 for c in decoded[:1000] if c.isprintable() or c in '\n\r\t') / min(len(decoded), 1000)
+                if printable_ratio > 0.7:  # At least 70% printable
+                    return decoded, encoding, []
+        except (UnicodeDecodeError, UnicodeError) as e:
+            errors_list.append(f"{encoding}: {str(e)[:50]}")
+            continue
+        except Exception as e:
+            errors_list.append(f"{encoding}: {str(e)[:50]}")
+            continue
+    
+    # Fallback: binary-safe reading with error replacement
+    try:
+        decoded = file_content.decode('utf-8', errors='replace')
+        return decoded, 'utf-8-fallback', errors_list
+    except Exception as e:
+        # Last resort: latin1 always works for any byte sequence
+        decoded = file_content.decode('latin1', errors='replace')
+        return decoded, 'latin1-fallback', errors_list
+
+
+def extract_pgn_from_can_id(can_id_value):
+    """
+    Extract PGN from CAN ID according to J1939 specification.
+    PGN = (CAN_ID >> 8) & 0x3FFFF for extended frames
+    
+    For standard J1939:
+    - 29-bit CAN ID: Priority (3 bits) + Reserved (1 bit) + Data Page (1 bit) + PDU Format (8 bits) + 
+                     PDU Specific/Destination (8 bits) + Source Address (8 bits)
+    - PGN = bits 8-25 (18 bits max), but commonly 16 bits: (CAN_ID >> 8) & 0xFFFF
+    
+    Args:
+        can_id_value: CAN ID as int, hex string, or decimal string
+        
+    Returns:
+        tuple: (pgn_int, pgn_hex_str) or (None, None) if invalid
+    """
+    try:
+        # Convert to integer
+        if isinstance(can_id_value, int):
+            can_id = can_id_value
+        elif isinstance(can_id_value, str):
+            can_id_str = can_id_value.strip().upper()
+            # Remove common prefixes
+            for prefix in ['0X', '0H', 'H', 'X']:
+                if can_id_str.startswith(prefix):
+                    can_id_str = can_id_str[len(prefix):]
+            
+            if not can_id_str:
+                return None, None
+            
+            # Try hex first if it looks like hex
+            if re.match(r'^[0-9A-F]+$', can_id_str):
+                # Determine if it's hex or decimal
+                # If contains A-F, definitely hex
+                if re.search(r'[A-F]', can_id_str):
+                    can_id = int(can_id_str, 16)
+                # If length > 8 digits, likely hex
+                elif len(can_id_str) > 8:
+                    can_id = int(can_id_str, 16)
+                # Try as decimal first for pure numeric
+                else:
+                    try:
+                        can_id = int(can_id_str, 10)
+                        # If result is unreasonably large, try hex
+                        if can_id > 0x1FFFFFFF:  # Max 29-bit CAN ID
+                            can_id = int(can_id_str, 16)
+                    except ValueError:
+                        can_id = int(can_id_str, 16)
+            else:
+                # Pure decimal
+                can_id = int(can_id_str, 10)
+        else:
+            return None, None
+        
+        # Validate CAN ID range (29-bit max)
+        if can_id < 0 or can_id > 0x1FFFFFFF:
+            return None, None
+        
+        # Extract PGN: (CAN_ID >> 8) & 0xFFFF (16-bit PGN)
+        # For J1939, PGN is typically in bits 8-23
+        pgn = (can_id >> 8) & 0xFFFF
+        
+        # Format as hex string (uppercase, no prefix)
+        pgn_hex = f"{pgn:04X}"
+        
+        return pgn, pgn_hex
+        
+    except (ValueError, TypeError) as e:
+        return None, None
+
+
+def find_can_id_column(headers):
+    """
+    Find the column index that likely contains CAN ID.
+    Returns column index or None.
+    """
+    can_id_patterns = [
+        r'^can\s*id$', r'^canid$', r'^id$', r'^can_id$',
+        r'^message\s*id$', r'^msg\s*id$', r'^msgid$',
+        r'^arbitration\s*id$', r'^arb\s*id$',
+        r'^identifier$', r'^frame\s*id$',
+        r'^id\(h\)$', r'^id_h$', r'^id\s*\(hex\)$'
+    ]
+    
+    for idx, header in enumerate(headers):
+        header_clean = header.strip().lower()
+        for pattern in can_id_patterns:
+            if re.match(pattern, header_clean):
+                return idx
+    return None
+
+
+def find_pgn_column(headers):
+    """
+    Find the column index that contains PGN values directly.
+    Returns column index or None.
+    """
+    pgn_patterns = [
+        r'^pgn\s*\(h\)$', r'^pgn_h$', r'^pgn\s*\(hex\)$', r'^pgn\s*hex$',
+        r'^pgn$', r'^pgn_dec$', r'^pgn\s*\(d\)$', r'^pgn\s*\(dec\)$'
+    ]
+    
+    for idx, header in enumerate(headers):
+        header_clean = header.strip().lower()
+        for pattern in pgn_patterns:
+            if re.match(pattern, header_clean):
+                return idx
+    return None
+
+
+def parse_line_for_can_id(line, delimiter=None):
+    """
+    Parse a line and try to extract CAN ID from various formats.
+    Handles CSV, space-separated, and raw CAN frame formats.
+    
+    Returns list of potential CAN IDs found.
+    """
+    can_ids = []
+    
+    # Try different delimiters
+    delimiters_to_try = [delimiter] if delimiter else [',', ';', '\t', ' ', '|']
+    
+    for delim in delimiters_to_try:
+        if delim is None:
+            continue
+        parts = [p.strip() for p in line.split(delim) if p.strip()]
+        
+        for part in parts:
+            # Check if part looks like a CAN ID (hex or decimal)
+            part_clean = part.upper().strip()
+            
+            # Remove common prefixes
+            for prefix in ['0X', '0H', 'H']:
+                if part_clean.startswith(prefix):
+                    part_clean = part_clean[len(prefix):]
+            
+            # Check if it's a valid hex/decimal number in CAN ID range
+            if re.match(r'^[0-9A-F]+$', part_clean):
+                try:
+                    # Try as hex first
+                    if re.search(r'[A-F]', part_clean):
+                        val = int(part_clean, 16)
+                    else:
+                        # Pure numeric - could be decimal or hex
+                        val = int(part_clean, 10)
+                        if val > 0x1FFFFFFF:
+                            val = int(part_clean, 16)
+                    
+                    # CAN ID reasonable range (J1939 29-bit extended)
+                    if 0x100 <= val <= 0x1FFFFFFF:
+                        can_ids.append(val)
+                except ValueError:
+                    continue
+    
+    return can_ids
+
+
 @csrf_exempt
 @require_POST
 def analyze_j1939_files(request):
     """
-    Analyze J1939 files and extract PGNs, SPNs with mapping according to J1939 standard.
-    Expects multipart/form-data with key 'files'.
+    Analyze J1939 data log files and extract PGNs.
+    
+    Supports:
+    - .csv, .txt, .log, and binary log files
+    - Automatic encoding detection (UTF-8, UTF-16, latin1, cp1252, GB2312, etc.)
+    - PGN extraction from CAN ID: PGN = (ID >> 8) & 0xFFFF
+    - Handles CAN ID in hex or decimal format
+    - CSV, space-separated, and raw frame formats
+    - Large file handling with streaming
+    - Graceful error handling for encoding issues
+    
+    Returns JSON:
+    {
+        "status": "success",
+        "total_pgn_count": <int>,      # Total PGN occurrences
+        "unique_pgn_count": <int>,      # Unique PGN values
+        "unique_pgn_list": ["F004", "FEF2", ...],
+        "vehicles": [...],              # Per-file breakdown
+        "errors": [...]                 # Any parsing errors
+    }
     """
     files = request.FILES.getlist('files')
+    if not files:
+        files = request.FILES.getlist('file')
+    if not files:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'No files uploaded',
+            'total_pgn_count': 0,
+            'unique_pgn_count': 0,
+            'unique_pgn_list': []
+        }, status=400)
+    
     vehicles = []
     errors = []
-    total_spn_count = 0
-    total_pgn_count = 0
-
-    # Minimal J1939 Standard PGN-SPN mapping (extend with official data as needed)
-    J1939_STANDARD_MAPPING = {
-        '00F002': [
-            'TransDrivelineEngaged', 'TrnsTorqueConverterLockupEngaged', 'TransShiftInProcess',
-            'TrnsTrqCnvrtrLckpTrnstnInProcess', 'TransOutputShaftSpeed', 'PercentClutchSlip',
-            'EngMomentaryOverspeedEnable', 'ProgressiveShiftDisable', 'MomentaryEngMaxPowerEnable',
-            'TransInputShaftSpeed', 'SrcAddrssOfCntrllngDvcFrTrnsCtrl'
-        ],
-        '00F004': [
-            'EngTorqueMode', 'ActlEngPrcntTorqueHighResolution', 'DriversDemandEngPercentTorque',
-            'ActualEngPercentTorque', 'EngSpeed', 'SrcAddrssOfCntrllngDvcForEngCtrl',
-            'EngStarterMode', 'EngDemandPercentTorque'
-        ],
-        '00FEF1': [
-            'TwoSpeedAxleSwitch', 'ParkingBrakeSwitch', 'CruiseCtrlPauseSwitch',
-            'ParkBrakeReleaseInhibitRq', 'WheelBasedVehicleSpeed', 'CruiseCtrlActive',
-            'CruiseCtrlEnableSwitch', 'BrakeSwitch', 'ClutchSwitch', 'CruiseCtrlSetSwitch',
-            'CruiseCtrlCoastSwitch', 'CruiseCtrlResumeSwitch', 'CruiseCtrlAccelerateSwitch',
-            'CruiseCtrlSetSpeed', 'PTOGovernorState', 'CruiseCtrlStates',
-            'EngIdleIncrementSwitch', 'EngIdleDecrementSwitch', 'EngTestModeSwitch',
-            'EngShutdownOverrideSwitch'
-        ],
-        # Extend with additional PGN mappings as needed
-    }
-
-    j1939_map = load_j1939_map()
-    agg_unique_spns = set()
-    agg_pgn_occurrences = 0
-    agg_pgn_mapping_combined = {}
-    agg_total_pgn_h_count = 0  # Total PGN(H) rows across all files
-    agg_unique_pgn_h_set = set()  # Unique PGN(H) hex values across all files
-
+    
+    # Aggregate counters across all files
+    all_pgn_occurrences = []  # List of all PGN hex values (with duplicates)
+    all_unique_pgns = set()   # Set of unique PGN hex values
+    
     for file in files:
+        file_errors = []
+        file_pgn_occurrences = []
+        file_unique_pgns = set()
+        
         try:
-            content = file.read().decode('utf-8')
-            lines = content.strip().split('\n')
-
-            # First, find "PGN(H)" column index from header
-            pgn_h_col_index = None
-            pgn_h_values = []  # All PGN(H) values (including duplicates)
+            # Read file content
+            file_content = file.read()
+            file.seek(0)  # Reset for potential re-read
             
-            for i, line in enumerate(lines):
-                columns = [col.strip() for col in line.split(',')]
-                if not columns:
+            # Detect encoding and decode
+            decoded_text, encoding_used, encoding_errors = detect_encoding_and_read(file_content)
+            
+            if encoding_errors:
+                file_errors.append(f"Encoding detection tried: {', '.join(encoding_errors[:3])}")
+            
+            logger.info(f"File {file.name}: Using encoding {encoding_used}")
+            
+            # Split into lines
+            lines = decoded_text.split('\n')
+            
+            # Detect file format and find relevant columns
+            headers = []
+            pgn_col_idx = None
+            can_id_col_idx = None
+            delimiter = ','
+            
+            # Find header row and column indices
+            for i, line in enumerate(lines[:20]):  # Check first 20 lines for header
+                line = line.strip()
+                if not line:
                     continue
                 
-                # Try to find header row with "PGN(H)" column
-                if pgn_h_col_index is None:
-                    for idx, col in enumerate(columns):
-                        if col.upper() in ['PGN(H)', 'PGN_H', 'PGN H', 'PGN']:
-                            pgn_h_col_index = idx
-                            break
-                    if pgn_h_col_index is not None:
-                        continue  # Skip header row
+                # Detect delimiter
+                for delim in [',', ';', '\t', '|']:
+                    if delim in line:
+                        delimiter = delim
+                        break
                 
-                # Collect PGN(H) values (filter empty/null)
-                if pgn_h_col_index is not None and len(columns) > pgn_h_col_index:
-                    pgn_h_val = columns[pgn_h_col_index].strip()
-                    if pgn_h_val and pgn_h_val.lower() not in ['', 'null', 'none', 'n/a']:
-                        pgn_h_values.append(pgn_h_val)
-
-            # Calculate PGN counts from PGN(H) column
-            total_pgn_count_from_column = len(pgn_h_values)
-            unique_pgn_count_from_column = len(set(pgn_h_values))
-
-            pgns = []
-            spns = []
-            pgn_spn_mapping = defaultdict(list)
-            current_pgn = None
-            spn_index = 0
-
-            for i, line in enumerate(lines):
-                columns = line.strip().split(',')
-
-                # Skip empty or insufficient lines
-                if not columns or len(columns) < 2:
-                    continue
-
-                # PGN row (first column has index)
-                if columns[0] and columns[0].isdigit():
-                    if len(columns) > 5 and columns[5].strip():  # PGN(H) column
-                        current_pgn = columns[5].strip()
-                        pgn_id = len(pgns) + 1
-
-                        is_hex = re.fullmatch(r'[0-9A-Fa-f]+', current_pgn) is not None
-                        pgn_dec = int(current_pgn, 16) if is_hex else 0
-
-                        pgn_info = {
-                            'id': pgn_id,
-                            'pgn_hex': current_pgn,
-                            'pgn_dec': pgn_dec,
-                            'name': columns[3] if len(columns) > 3 else f'PGN_{current_pgn}',
-                            'message_id': columns[4] if len(columns) > 4 else '',
-                            'source_addr': columns[6] if len(columns) > 6 else '',
-                            'data_length': columns[9] if len(columns) > 9 else 0,
-                            'data_bytes': columns[10] if len(columns) > 10 else ''
-                        }
-                        pgns.append(pgn_info)
-
-                # SPN row (starts with empty first column)
-                elif columns[0] == '' and len(columns) > 1 and columns[1].strip():
-                    if columns[1] == 'Name':
+                columns = [col.strip() for col in line.split(delimiter)]
+                
+                # Check if this looks like a header row
+                pgn_idx = find_pgn_column(columns)
+                can_idx = find_can_id_column(columns)
+                
+                if pgn_idx is not None or can_idx is not None:
+                    headers = columns
+                    pgn_col_idx = pgn_idx
+                    can_id_col_idx = can_idx
+                    # Start processing from next line
+                    lines = lines[i+1:]
+                    break
+            
+            # Process data lines
+            for line_num, line in enumerate(lines):
+                try:
+                    line = line.strip()
+                    if not line:
                         continue
-
-                    spn_index += 1
-                    spn_info = {
-                        'id': spn_index,
-                        'name': columns[1].strip(),
-                        'physical_value': columns[2].strip() if len(columns) > 2 else '',
-                        'description': columns[3].strip() if len(columns) > 3 else '',
-                        'comment': columns[4].strip() if len(columns) > 4 else '',
-                        'raw_value': columns[5].strip() if len(columns) > 5 else '',
-                        'start_bit': columns[6].strip() if len(columns) > 6 else '',
-                        'bit_width': columns[7].strip() if len(columns) > 7 else '',
-                        'factor': columns[8].strip() if len(columns) > 8 else '',
-                        'offset': columns[9].strip() if len(columns) > 9 else '',
-                        'pgn_hex': current_pgn,
-                        'pgn_name': next((p['name'] for p in pgns if p['pgn_hex'] == current_pgn), 'Unknown')
-                    }
-                    spns.append(spn_info)
-
-                    if current_pgn:
-                        pgn_spn_mapping[current_pgn].append(spn_info)
-
+                    
+                    columns = [col.strip() for col in line.split(delimiter)]
+                    
+                    # Method 1: Direct PGN column
+                    if pgn_col_idx is not None and pgn_col_idx < len(columns):
+                        pgn_value = columns[pgn_col_idx].strip()
+                        if pgn_value and pgn_value.lower() not in ['', 'null', 'none', 'n/a', 'pgn', 'pgn(h)']:
+                            # Normalize PGN value to hex
+                            pgn_clean = pgn_value.upper()
+                            for prefix in ['0X', '0H', 'H']:
+                                if pgn_clean.startswith(prefix):
+                                    pgn_clean = pgn_clean[len(prefix):]
+                            
+                            if re.match(r'^[0-9A-F]+$', pgn_clean):
+                                # Pad to at least 4 characters
+                                pgn_hex = pgn_clean.zfill(4).upper()
+                                file_pgn_occurrences.append(pgn_hex)
+                                file_unique_pgns.add(pgn_hex)
+                    
+                    # Method 2: Extract PGN from CAN ID column
+                    elif can_id_col_idx is not None and can_id_col_idx < len(columns):
+                        can_id_value = columns[can_id_col_idx].strip()
+                        pgn_int, pgn_hex = extract_pgn_from_can_id(can_id_value)
+                        if pgn_hex:
+                            file_pgn_occurrences.append(pgn_hex)
+                            file_unique_pgns.add(pgn_hex)
+                    
+                    # Method 3: Try to find CAN ID anywhere in the line
+                    else:
+                        can_ids = parse_line_for_can_id(line, delimiter)
+                        for can_id in can_ids[:1]:  # Take first valid CAN ID per line
+                            pgn_int, pgn_hex = extract_pgn_from_can_id(can_id)
+                            if pgn_hex:
+                                file_pgn_occurrences.append(pgn_hex)
+                                file_unique_pgns.add(pgn_hex)
+                                break
+                
+                except Exception as line_error:
+                    # Log but continue processing
+                    if len(file_errors) < 10:
+                        file_errors.append(f"Line {line_num}: {str(line_error)[:50]}")
+                    continue
+            
+            # Build vehicle/file result
             vehicle_name = file.name.split('.')[0].replace('_', ' ').replace('-', ' ')
-            vehicle_id = len(vehicles) + 1
-
+            
             vehicle = {
-                'id': vehicle_id,
+                'id': len(vehicles) + 1,
                 'name': vehicle_name,
-                'brand': extract_brand(vehicle_name),
+                'brand': extract_brand(file.name),
                 'filename': file.name,
-                'source_file': file.name,
-                'pgns': pgns,
-                'spns': spns,
-                'pgn_spn_mapping': dict(pgn_spn_mapping),
-                'pgn_count': len(pgns),
-                'spn_count': len(spns),
-                'upload_date': datetime.now().isoformat(),
+                'encoding_used': encoding_used,
+                'total_pgn_count': len(file_pgn_occurrences),
+                'unique_pgn_count': len(file_unique_pgns),
+                'unique_pgn_list': sorted(list(file_unique_pgns)),
                 'analysis_summary': {
-                    'total_messages': len(pgns),
-                    'total_parameters': len(spns),
-                    'unique_pgns': len(set([p['pgn_hex'] for p in pgns])),
-                    'unique_spns': len(set([s['name'] for s in spns])),
-                    'pgns_with_spns': len(pgn_spn_mapping)
-                },
-                'pgn_h_column_stats': {
-                    'total_pgn_count': total_pgn_count_from_column,  # Including duplicates
-                    'unique_pgn_count': unique_pgn_count_from_column  # Distinct hex values
+                    'total_lines_processed': len(lines),
+                    'pgn_extraction_method': 'pgn_column' if pgn_col_idx is not None else 
+                                            'can_id_column' if can_id_col_idx is not None else 
+                                            'auto_detect'
                 }
             }
-
+            
             vehicles.append(vehicle)
-            total_spn_count += len(spns)
-            total_pgn_count += len(pgns)
-
-            # Aggregate PGN(H) column stats across all files
-            agg_total_pgn_h_count += total_pgn_count_from_column
-            agg_unique_pgn_h_set.update(pgn_h_values)
-
-            # Standard map summary per vehicle
-            standard_summary = summarize_pgns_with_map(pgns, j1939_map)
-            vehicle['standard_summary'] = standard_summary
-
-            # Aggregate across all vehicles (standard map)
-            agg_pgn_occurrences += standard_summary.get("spn_occurrences", 0)
-            for spn in standard_summary.get("pgn_spn_mapping", {}).values():
-                for s in spn.get("spns", []):
-                    agg_unique_spns.add(s["spn"])
-            agg_pgn_mapping_combined.update(standard_summary.get("pgn_spn_mapping", {}))
-
+            
+            # Add to aggregates
+            all_pgn_occurrences.extend(file_pgn_occurrences)
+            all_unique_pgns.update(file_unique_pgns)
+            
+            if file_errors:
+                errors.append({
+                    'filename': file.name,
+                    'warnings': file_errors[:10]  # Limit warnings per file
+                })
+                
         except Exception as e:
+            logger.error(f"Error processing file {file.name}: {str(e)}", exc_info=True)
             errors.append({
                 'filename': file.name,
+                'error': f"Failed to parse file: {str(e)}"
+            })
+            # Still add empty vehicle entry
+            vehicles.append({
+                'id': len(vehicles) + 1,
+                'name': file.name.split('.')[0],
+                'filename': file.name,
+                'total_pgn_count': 0,
+                'unique_pgn_count': 0,
+                'unique_pgn_list': [],
                 'error': str(e)
             })
-
-    unique_spns_all = set()
-    unique_pgns_all = set()
-    for v in vehicles:
-        unique_spns_all.update([s['name'] for s in v.get('spns', [])])
-        unique_pgns_all.update([p['pgn_hex'] for p in v.get('pgns', [])])
-
-    overall_standard = {
-        "pgn_count": len(agg_pgn_mapping_combined),
-        "spn_occurrences": agg_pgn_occurrences,
-        "unique_spn_count": len(agg_unique_spns),
-        "pgn_spn_mapping": agg_pgn_mapping_combined
-    } if j1939_map else {}
-
+    
+    # Build response
     return JsonResponse({
         'status': 'success',
+        'total_pgn_count': len(all_pgn_occurrences),
+        'unique_pgn_count': len(all_unique_pgns),
+        'unique_pgn_list': sorted(list(all_unique_pgns)),
         'vehicles': vehicles,
         'errors': errors,
         'totals': {
             'total_vehicles': len(vehicles),
-            'total_spn_count': total_spn_count,
-            'total_pgn_count': total_pgn_count,
-            'unique_spns_across_all': len(unique_spns_all),
-            'unique_pgns_across_all': len(unique_pgns_all),
+            'total_pgn_count': len(all_pgn_occurrences),
+            'unique_pgn_count': len(all_unique_pgns),
             'pgn_h_column_stats': {
-                'total_pgn_count': agg_total_pgn_h_count,  # Total PGN(H) rows (including duplicates)
-                'unique_pgn_count': len(agg_unique_pgn_h_set)  # Unique PGN(H) hex values
+                'total_pgn_count': len(all_pgn_occurrences),
+                'unique_pgn_count': len(all_unique_pgns)
             }
-        },
-        'standard_summary': overall_standard
+        }
     })
 
 
@@ -1199,3 +1655,560 @@ def extract_brand(filename):
         if brand_key in filename_lower:
             return brand_name
     return 'Unknown'
+
+
+# =============================================================================
+# J1939 Parameter Definitions API Views
+# =============================================================================
+
+class J1939ParameterDefinitionListView(generics.ListCreateAPIView):
+    """
+    GET: List all J1939 parameter definitions
+    POST: Create a new parameter definition
+    """
+    queryset = J1939ParameterDefinition.objects.all()
+    serializer_class = J1939ParameterDefinitionSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        queryset = J1939ParameterDefinition.objects.all()
+        # Filter by PGN if provided
+        pgn = self.request.query_params.get('pgn', None)
+        if pgn is not None:
+            queryset = queryset.filter(PGN_DEC=pgn)
+        return queryset
+
+
+class J1939ParameterDefinitionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET: Retrieve a specific parameter definition by SPN number
+    PUT/PATCH: Update a parameter definition
+    DELETE: Delete a parameter definition
+    """
+    queryset = J1939ParameterDefinition.objects.all()
+    serializer_class = J1939ParameterDefinitionSerializer
+    permission_classes = [permissions.AllowAny]
+    lookup_field = 'SPN_Number'
+
+
+class DecodeSPNValueView(APIView):
+    """
+    POST /api/j1939/decode-spn/
+    
+    Decode raw CAN data bytes to physical SPN value using J1939 parameter definitions.
+    
+    Request Body:
+    {
+        "spn_number": 84,
+        "raw_data": [0, 0, 0, 0, 255, 127, 0, 0]  // 8 bytes of raw CAN data
+    }
+    
+    Response:
+    {
+        "spn_number": 84,
+        "spn_description": "Wheel-Based Vehicle Speed",
+        "raw_value": 32767,
+        "physical_value": 255.9921875,
+        "unit": "km/h",
+        "status": "Valid"
+    }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = SPNDecodeRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        spn_number = serializer.validated_data['spn_number']
+        raw_data = serializer.validated_data['raw_data']
+
+        try:
+            param_def = J1939ParameterDefinition.objects.get(SPN_Number=spn_number)
+        except J1939ParameterDefinition.DoesNotExist:
+            return Response({
+                'error': f'SPN {spn_number} not found in parameter definitions'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Decode the SPN value
+        decoded = param_def.decode_spn_value(raw_data)
+
+        if decoded is None:
+            return Response({
+                'spn_number': spn_number,
+                'spn_description': param_def.SPN_Description,
+                'raw_value': None,
+                'physical_value': None,
+                'unit': param_def.Unit,
+                'status': 'Error - Could not decode raw bytes'
+            })
+
+        response_data = {
+            'spn_number': decoded['spn_number'],
+            'spn_description': decoded['spn_description'],
+            'raw_value': decoded['raw_value'],
+            'physical_value': decoded['physical_value'],
+            'unit': decoded['unit'],
+            'status': decoded['status']
+        }
+
+        return Response(response_data)
+
+
+class UniqueSPNCountView(APIView):
+    """
+    GET /api/j1939/unique-spn-count/
+    
+    Get count of unique SPNs in the J1939 parameter definitions.
+    Optionally filter by PGN.
+    
+    Query Parameters:
+    - pgn (optional): Filter by PGN decimal number
+    
+    Response:
+    {
+        "unique_spn_count": 9,
+        "spn_numbers": [84, 182, 959, 960, 961, 962, 963, 964, 4191],
+        "pgn_filter": null
+    }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        pgn = request.query_params.get('pgn', None)
+        
+        queryset = J1939ParameterDefinition.objects.all()
+        if pgn is not None:
+            try:
+                pgn = int(pgn)
+                queryset = queryset.filter(PGN_DEC=pgn)
+            except ValueError:
+                return Response({
+                    'error': 'Invalid PGN value'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        spn_numbers = list(queryset.values_list('SPN_Number', flat=True).distinct())
+        
+        return Response({
+            'unique_spn_count': len(spn_numbers),
+            'spn_numbers': sorted(spn_numbers),
+            'pgn_filter': pgn
+        })
+
+
+class PGNSummaryView(APIView):
+    """
+    GET /api/j1939/pgn-summary/
+    
+    Get summary of all PGNs with their associated SPNs from parameter definitions.
+    
+    Response:
+    {
+        "pgn_count": 4,
+        "pgns": [
+            {
+                "pgn": 0,
+                "spn_count": 1,
+                "spns": [4191]
+            },
+            ...
+        ]
+    }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        # Group SPNs by PGN
+        pgn_data = J1939ParameterDefinition.objects.values('PGN_DEC').annotate(
+            spn_count=Count('SPN_Number')
+        ).order_by('PGN_DEC')
+
+        pgns = []
+        for item in pgn_data:
+            spns = list(J1939ParameterDefinition.objects.filter(
+                PGN_DEC=item['PGN_DEC']
+            ).values_list('SPN_Number', flat=True))
+            pgns.append({
+                'pgn': item['PGN_DEC'],
+                'spn_count': item['spn_count'],
+                'spns': sorted(spns)
+            })
+
+        return Response({
+            'pgn_count': len(pgns),
+            'pgns': pgns
+        })
+
+
+class PGNToSPNMappingView(APIView):
+    """
+    POST /api/j1939/pgn-spn-mapping/
+    
+    Map a list of PGNs to their corresponding SPNs with full details.
+    This is the main endpoint for SPN analysis from uploaded files.
+    
+    Request Body:
+    {
+        "pgn_list": [65265, 65254, 65263, 65266, 61450, ...]
+    }
+    
+    Response:
+    {
+        "total_unique_spn_count": 11,
+        "total_pgn_count": 5,
+        "pgns_with_spn_data": 4,
+        "pgns_without_spn_data": 1,
+        "data": [
+            {
+                "PGN_DEC": 65266,
+                "PGN_HEX": "0xFEF2",
+                "SPNs": [
+                    {
+                        "SPN": 183,
+                        "Description": "Engine Fuel Rate",
+                        "Bit_Range": "1-2",
+                        "Length_Bits": 16,
+                        "Unit": "L/h",
+                        "Resolution": 0.05,
+                        "Offset": 0
+                    }
+                ]
+            },
+            {
+                "PGN_DEC": 61450,
+                "PGN_HEX": "0xF00A",
+                "SPNs": [],
+                "message": "No SPN Data Available"
+            }
+        ]
+    }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        pgn_list = request.data.get('pgn_list', [])
+        
+        if not pgn_list:
+            return Response({
+                'error': 'pgn_list is required',
+                'message': 'Please provide a list of PGN decimal values'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Convert all to integers
+        try:
+            pgn_list = [int(pgn) for pgn in pgn_list]
+        except (ValueError, TypeError):
+            return Response({
+                'error': 'Invalid PGN values',
+                'message': 'All PGN values must be integers'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        result = []
+        unique_spns = set()
+        pgns_with_data = 0
+        pgns_without_data = 0
+
+        for pgn in pgn_list:
+            # Get all SPN definitions for this PGN
+            spn_rows = J1939ParameterDefinition.objects.filter(PGN_DEC=pgn)
+
+            if not spn_rows.exists():
+                pgns_without_data += 1
+                result.append({
+                    "PGN_DEC": pgn,
+                    "PGN_HEX": f"0x{pgn:04X}",
+                    "SPNs": [],
+                    "message": "No SPN Data Available"
+                })
+                continue
+
+            pgns_with_data += 1
+            spn_list = []
+            pgn_hex = None
+
+            for row in spn_rows:
+                unique_spns.add(row.SPN_Number)
+                pgn_hex = row.PGN_HEX or f"0x{pgn:04X}"
+
+                # Calculate bit range string
+                start_byte = row.Start_Byte
+                bit_length = row.Bit_Length
+                data_length = row.Data_Length_Bytes
+                
+                if data_length == 1:
+                    bit_range = str(start_byte)
+                elif data_length == 2:
+                    bit_range = f"{start_byte}-{start_byte + 1}"
+                else:
+                    bit_range = f"{start_byte}-{start_byte + data_length - 1}"
+
+                spn_list.append({
+                    "SPN": row.SPN_Number,
+                    "Description": row.SPN_Description,
+                    "Bit_Range": bit_range,
+                    "Start_Byte": start_byte,
+                    "Start_Bit": row.Start_Bit,
+                    "Length_Bits": bit_length,
+                    "Data_Length_Bytes": data_length,
+                    "Unit": row.Unit,
+                    "Resolution": row.Resolution,
+                    "Offset": row.Offset,
+                    "Min_Value": row.Min_Value,
+                    "Max_Value": row.Max_Value
+                })
+
+            result.append({
+                "PGN_DEC": pgn,
+                "PGN_HEX": pgn_hex,
+                "SPNs": spn_list
+            })
+
+        return Response({
+            "total_unique_spn_count": len(unique_spns),
+            "total_pgn_count": len(pgn_list),
+            "pgns_with_spn_data": pgns_with_data,
+            "pgns_without_spn_data": pgns_without_data,
+            "unique_spn_list": sorted(list(unique_spns)),
+            "data": result
+        })
+
+
+class UploadSPNMasterView(APIView):
+    """
+    POST /api/j1939/upload-spn-master/
+    
+    Upload a CSV file containing SPN master data to populate the J1939ParameterDefinition table.
+    
+    Expected CSV columns:
+    PGN_DEC, PGN_HEX, SPN_Number, SPN_Name, DL, SPB, Length_Bits, Unit
+    
+    Optional columns:
+    Resolution, Offset, Min_Value, Max_Value
+    """
+    permission_classes = [permissions.AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        if 'file' not in request.FILES:
+            return Response({
+                'error': 'No file uploaded',
+                'message': 'Please upload a CSV file'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        file = request.FILES['file']
+        
+        # Check file extension
+        if not file.name.endswith('.csv'):
+            return Response({
+                'error': 'Invalid file type',
+                'message': 'Only CSV files are supported'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Read CSV file
+            import csv
+            import io
+            
+            content = file.read().decode('utf-8')
+            reader = csv.DictReader(io.StringIO(content))
+            
+            created_count = 0
+            updated_count = 0
+            errors = []
+
+            for row_num, row in enumerate(reader, start=2):
+                try:
+                    # Parse required fields
+                    spn_number = int(row.get('SPN_Number', row.get('SPN', 0)))
+                    pgn_dec = int(row.get('PGN_DEC', row.get('PGN', 0)))
+                    pgn_hex = row.get('PGN_HEX', f"0x{pgn_dec:04X}")
+                    spn_name = row.get('SPN_Name', row.get('Description', ''))
+                    unit = row.get('Unit', '')
+                    
+                    # Parse byte/bit info
+                    data_length = int(row.get('DL', row.get('Data_Length', 1)))
+                    spb = row.get('SPB', row.get('Start_Byte', '1'))
+                    
+                    # Parse SPB which could be "1-2" or just "1"
+                    if '-' in str(spb):
+                        start_byte = int(str(spb).split('-')[0])
+                    else:
+                        start_byte = int(spb)
+                    
+                    length_bits = int(row.get('Length_Bits', row.get('Bit_Length', 8)))
+                    
+                    # Parse optional fields
+                    resolution = float(row.get('Resolution', 1.0))
+                    offset = float(row.get('Offset', 0.0))
+                    min_value = row.get('Min_Value')
+                    max_value = row.get('Max_Value')
+                    
+                    min_value = float(min_value) if min_value else None
+                    max_value = float(max_value) if max_value else None
+
+                    # Create or update
+                    obj, created = J1939ParameterDefinition.objects.update_or_create(
+                        SPN_Number=spn_number,
+                        defaults={
+                            'PGN_DEC': pgn_dec,
+                            'PGN_HEX': pgn_hex,
+                            'SPN_Description': spn_name,
+                            'Unit': unit,
+                            'Data_Length_Bytes': data_length,
+                            'Start_Byte': start_byte,
+                            'Start_Bit': 0,
+                            'Bit_Length': length_bits,
+                            'Resolution': resolution,
+                            'Offset': offset,
+                            'Min_Value': min_value,
+                            'Max_Value': max_value
+                        }
+                    )
+
+                    if created:
+                        created_count += 1
+                    else:
+                        updated_count += 1
+
+                except Exception as e:
+                    errors.append(f"Row {row_num}: {str(e)}")
+
+            return Response({
+                'status': 'success',
+                'created': created_count,
+                'updated': updated_count,
+                'total_processed': created_count + updated_count,
+                'errors': errors if errors else None,
+                'message': f"Successfully processed {created_count + updated_count} SPN definitions"
+            })
+
+        except Exception as e:
+            return Response({
+                'error': 'Failed to process file',
+                'message': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AnalyzePGNsFromFileView(APIView):
+    """
+    POST /api/j1939/analyze-pgns/
+    
+    Analyze PGNs from an uploaded J1939 data file and return SPN mappings.
+    Automatically extracts PGNs from the file and maps them to SPNs.
+    """
+    permission_classes = [permissions.AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        if 'file' not in request.FILES:
+            return Response({
+                'error': 'No file uploaded'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        file = request.FILES['file']
+        extracted_pgns = set()
+        
+        try:
+            content = file.read().decode('utf-8', errors='ignore')
+            
+            # Try to parse as CSV
+            import csv
+            import io
+            
+            reader = csv.DictReader(io.StringIO(content))
+            
+            # Look for PGN column (various possible names)
+            pgn_columns = ['PGN', 'pgn', 'PGN_DEC', 'pgn_dec', 'PGN_H', 'PGN_Hex', 'ParameterGroupNumber']
+            
+            for row in reader:
+                for col in pgn_columns:
+                    if col in row and row[col]:
+                        try:
+                            pgn_value = row[col]
+                            # Handle hex values
+                            if str(pgn_value).lower().startswith('0x'):
+                                pgn_int = int(pgn_value, 16)
+                            else:
+                                pgn_int = int(pgn_value)
+                            extracted_pgns.add(pgn_int)
+                        except (ValueError, TypeError):
+                            pass
+
+            if not extracted_pgns:
+                return Response({
+                    'error': 'No PGNs found in file',
+                    'message': 'Could not extract PGN values from the uploaded file'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Now map PGNs to SPNs
+            pgn_list = sorted(list(extracted_pgns))
+            
+            result = []
+            unique_spns = set()
+            pgns_with_data = 0
+            pgns_without_data = 0
+
+            for pgn in pgn_list:
+                spn_rows = J1939ParameterDefinition.objects.filter(PGN_DEC=pgn)
+
+                if not spn_rows.exists():
+                    pgns_without_data += 1
+                    result.append({
+                        "PGN_DEC": pgn,
+                        "PGN_HEX": f"0x{pgn:04X}",
+                        "SPNs": [],
+                        "message": "No SPN Data Available"
+                    })
+                    continue
+
+                pgns_with_data += 1
+                spn_list = []
+                pgn_hex = None
+
+                for row in spn_rows:
+                    unique_spns.add(row.SPN_Number)
+                    pgn_hex = row.PGN_HEX or f"0x{pgn:04X}"
+
+                    # Calculate bit range
+                    start_byte = row.Start_Byte
+                    data_length = row.Data_Length_Bytes
+                    
+                    if data_length == 1:
+                        bit_range = str(start_byte)
+                    elif data_length == 2:
+                        bit_range = f"{start_byte}-{start_byte + 1}"
+                    else:
+                        bit_range = f"{start_byte}-{start_byte + data_length - 1}"
+
+                    spn_list.append({
+                        "SPN": row.SPN_Number,
+                        "Description": row.SPN_Description,
+                        "Bit_Range": bit_range,
+                        "Length_Bits": row.Bit_Length,
+                        "Unit": row.Unit
+                    })
+
+                result.append({
+                    "PGN_DEC": pgn,
+                    "PGN_HEX": pgn_hex,
+                    "SPNs": spn_list
+                })
+
+            return Response({
+                "status": "success",
+                "filename": file.name,
+                "total_unique_spn_count": len(unique_spns),
+                "total_pgn_count": len(pgn_list),
+                "pgns_with_spn_data": pgns_with_data,
+                "pgns_without_spn_data": pgns_without_data,
+                "unique_spn_list": sorted(list(unique_spns)),
+                "data": result
+            })
+
+        except Exception as e:
+            return Response({
+                'error': 'Failed to analyze file',
+                'message': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+

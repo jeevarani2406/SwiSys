@@ -2,7 +2,7 @@
 
 import { Users, UserCheck, Package, Activity, TrendingUp, Clock } from 'lucide-react';
 
-export default function DashboardStats({ stats, loading }) {
+export default function DashboardStats({ stats, loading, onTabChange }) {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -127,15 +127,24 @@ export default function DashboardStats({ stats, loading }) {
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h3>
                 <div className="bg-white rounded-lg shadow-sm border p-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <button className="flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                        <button 
+                            onClick={() => onTabChange && onTabChange('employees')}
+                            className="flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        >
                             <UserCheck className="h-5 w-5 mr-2" />
-                            Review Employee Approvals
+                            Review Approvals
                         </button>
-                        <button className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                        <button 
+                            onClick={() => onTabChange && onTabChange('products')}
+                            className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                        >
                             <Package className="h-5 w-5 mr-2" />
                             Manage Products
                         </button>
-                        <button className="flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">
+                        <button 
+                            onClick={() => onTabChange && onTabChange('login-logs')}
+                            className="flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                        >
                             <Activity className="h-5 w-5 mr-2" />
                             View Activity Logs
                         </button>

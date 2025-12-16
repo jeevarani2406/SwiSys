@@ -56,7 +56,7 @@ export default function AdminDashboard() {
     const renderContent = () => {
         switch (activeTab) {
             case 'dashboard':
-                return <DashboardStats stats={stats} loading={loading} />;
+                return <DashboardStats stats={stats} loading={loading} onTabChange={setActiveTab} />;
             case 'employees':
                 return <EmployeeManagement />;
             case 'customers':
@@ -68,7 +68,7 @@ export default function AdminDashboard() {
             case 'product-logs':
                 return <ProductUpdateLogs />;
             default:
-                return <DashboardStats stats={stats} loading={loading} />;
+                return <DashboardStats stats={stats} loading={loading} onTabChange={setActiveTab} />;
         }
     };
 

@@ -206,9 +206,9 @@ CORS_ALLOW_CREDENTIALS = True
 # Trust the frontend origin for CSRF (development)
 CSRF_TRUSTED_ORIGINS = env('CSRF_TRUSTED_ORIGINS', default=['http://localhost:3000'])
 
-# Increase upload limits for large Excel files in development (bytes). Adjust as needed.
-DATA_UPLOAD_MAX_MEMORY_SIZE = int(env('DATA_UPLOAD_MAX_MEMORY_SIZE', default=26214400))  # 25 MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = int(env('FILE_UPLOAD_MAX_MEMORY_SIZE', default=26214400))  # 25 MB
+# Increase upload limits for large files (100MB)
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(env('DATA_UPLOAD_MAX_MEMORY_SIZE', default=104857600))  # 100 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(env('FILE_UPLOAD_MAX_MEMORY_SIZE', default=104857600))  # 100 MB
 
 # -------------------------
 # API DOCUMENTATION

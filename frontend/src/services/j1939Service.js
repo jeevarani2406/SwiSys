@@ -20,6 +20,9 @@ class J1939Service {
 
     try {
       const response = await this.axios.post('/api/j1939/upload/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const percentCompleted = Math.round(
@@ -28,13 +31,45 @@ class J1939Service {
             onProgress(percentCompleted);
           }
         },
+        // Increase timeout for large files
+        timeout: 300000, // 5 minutes
       });
 
       // Process and format the response
       return this.formatResponse(response.data);
     } catch (error) {
       console.error('Upload error:', error);
-      throw error;
+      
+      // Extract detailed error message
+      let errorMessage = 'Upload failed';
+      if (error.response?.data) {
+        const data = error.response.data;
+        if (typeof data === 'object') {
+          if (data.errors && Array.isArray(data.errors)) {
+            errorMessage = data.errors.map(e => e.error || e.filename || String(e)).join('; ');
+          } else if (data.error) {
+            errorMessage = data.error;
+          } else {
+            const fieldErrors = Object.entries(data)
+              .map(([field, msgs]) => {
+                const msgText = Array.isArray(msgs) ? msgs.join(', ') : msgs;
+                return `${field}: ${msgText}`;
+              })
+              .join('; ');
+            errorMessage = fieldErrors || JSON.stringify(data);
+          }
+        } else {
+          errorMessage = String(data);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // Create a new error with the detailed message
+      const enhancedError = new Error(errorMessage);
+      enhancedError.response = error.response;
+      enhancedError.originalError = error;
+      throw enhancedError;
     }
   }
 
@@ -46,6 +81,7 @@ class J1939Service {
     // Calculate totals
     let totalSpnCount = 0;
     let totalPgnCount = 0;
+    let totalJ1939SpnCount = 0;
     
     const formattedVehicles = vehicles.map(vehicle => {
       // Derive counts even if backend didn't supply spn_count/pgn_count
@@ -66,8 +102,14 @@ class J1939Service {
         || derivedPgnCountFromMap
         || 0;
 
+      // J1939 Standard SPN count (mapped from PGNs)
+      const j1939SpnCount = vehicle.j1939_unique_spn_count || 0;
+      const j1939SpnList = vehicle.j1939_spn_list || [];
+      const j1939SpnDetails = vehicle.j1939_spn_details || [];
+
       totalSpnCount += spnCount;
       totalPgnCount += pgnCount;
+      totalJ1939SpnCount += j1939SpnCount;
       
       return {
         id: vehicle.id,
@@ -78,6 +120,14 @@ class J1939Service {
         source_file: vehicle.source_file,
         pgnCount,
         spnCount,
+        // J1939 Standard SPN data
+        j1939_unique_spn_count: j1939SpnCount,
+        j1939_spn_list: j1939SpnList,
+        j1939_spn_details: j1939SpnDetails,
+        // PGN stats
+        total_pgn_messages: vehicle.total_pgn_messages || 0,
+        unique_pgn_count: vehicle.unique_pgn_count || pgnCount,
+        unique_pgn_list: vehicle.unique_pgn_list || [],
         upload_date: vehicle.upload_date || new Date().toISOString(),
         spns: vehicle.spns || [],
         pgns: vehicle.pgns || [],
@@ -93,6 +143,9 @@ class J1939Service {
         total_spn_count: totalSpnCount,
         total_pgn_count: totalPgnCount,
         total_vehicles: vehicles.length,
+        // J1939 Standard SPN totals
+        j1939_unique_spn_count: data.totals?.j1939_unique_spn_count || totalJ1939SpnCount,
+        j1939_spn_list: data.totals?.j1939_spn_list || [],
         ...(data.totals || {})
       }
     };
@@ -128,6 +181,105 @@ class J1939Service {
       return response.data;
     } catch (error) {
       console.error('Error fetching statistics:', error);
+      throw error;
+    }
+  }
+
+  // Map PGNs to SPNs - POST a list of PGNs and get SPN details
+  async mapPGNsToSPNs(pgnList) {
+    try {
+      const response = await this.axios.post('/api/j1939/pgn-spn-mapping/', {
+        pgn_list: pgnList
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error mapping PGNs to SPNs:', error);
+      throw error;
+    }
+  }
+
+  // Upload SPN master CSV file
+  async uploadSPNMaster(file, onProgress = () => {}) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await this.axios.post('/api/j1939/upload-spn-master/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            onProgress(percentCompleted);
+          }
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading SPN master:', error);
+      throw error;
+    }
+  }
+
+  // Analyze PGNs from uploaded file and get SPN mappings
+  async analyzePGNsFromFile(file, onProgress = () => {}) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await this.axios.post('/api/j1939/analyze-pgns/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            onProgress(percentCompleted);
+          }
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error analyzing PGNs from file:', error);
+      throw error;
+    }
+  }
+
+  // Get unique SPN count
+  async getUniqueSPNCount(pgn = null) {
+    try {
+      const params = pgn ? { pgn } : {};
+      const response = await this.axios.get('/api/j1939/unique-spn-count/', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error getting unique SPN count:', error);
+      throw error;
+    }
+  }
+
+  // Get PGN summary with SPNs
+  async getPGNSummary() {
+    try {
+      const response = await this.axios.get('/api/j1939/pgn-summary/');
+      return response.data;
+    } catch (error) {
+      console.error('Error getting PGN summary:', error);
+      throw error;
+    }
+  }
+
+  // Get all parameter definitions
+  async getParameterDefinitions() {
+    try {
+      const response = await this.axios.get('/api/j1939/parameter-definitions/');
+      return response.data;
+    } catch (error) {
+      console.error('Error getting parameter definitions:', error);
       throw error;
     }
   }
