@@ -59,7 +59,7 @@ export default function ProductManagement() {
     const fetchUploadedFiles = async () => {
         setFilesLoading(true);
         try {
-            const response = await apiClient.get('/api/j1939/vehicles/');
+            const response = await apiClient.get('/j1939/vehicles/');
             const data = response.data || [];
             setUploadedFiles(Array.isArray(data) ? data : []);
             
