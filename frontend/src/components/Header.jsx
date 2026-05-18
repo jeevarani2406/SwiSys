@@ -126,12 +126,12 @@ export default function Header({ language, setLanguage, isMenuOpen, setIsMenuOpe
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/">
-            <img
-              src="https://swisystem.com/wp-content/uploads/2020/05/swisys-logo.png"
-              alt="SwiSys Logo"
-              className="h-10 w-auto mr-3 cursor-pointer"
-            />
-          </Link>
+  <img
+    src="/downloads/swisys.logo.png"
+    alt="SwiSys Logo"
+    className="h-10 w-auto mr-3 cursor-pointer"
+  />
+</Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:block relative">
