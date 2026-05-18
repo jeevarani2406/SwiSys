@@ -50,44 +50,72 @@ SwiSys/
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### ⚡ Super Quick (5 Minutes)
 
-* Python 3.12+
-* Node.js 18+
-* npm or yarn
-
-### Installation
-
-1. **Clone the repository**
 ```bash
+# 1. Clone repository
 git clone https://github.com/jeevarani2406/SwiSys.git
 cd SwiSys
+
+# 2. Verify setup (optional but recommended)
+python verify_setup.py
+
+# 3. Start both servers (Windows)
+.\startup.ps1
+
+# 3. Start both servers (macOS/Linux)
+# Terminal 1:
+source .venv/bin/activate
+cd backend && python manage.py runserver
+
+# Terminal 2:
+cd frontend && npm run dev
 ```
 
-2. **Backend Setup**
-```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\Activate.ps1  # Windows
-source .venv/bin/activate    # macOS/Linux
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
-```
+### ✅ Verify it works
 
-3. **Frontend Setup**
-```bash
-cd frontend
-npm install
-npm run dev
-```
+- Open http://localhost:3000 in your browser
+- Login with superuser credentials
+- Start building!
+
+### 📚 Detailed Setup Guide
+
+For complete step-by-step instructions, configuration options, and troubleshooting, see **[SETUP.md](SETUP.md)**
+
+### Prerequisites
+
+* Python 3.12+ - [Download](https://www.python.org/downloads/)
+* Node.js 18+ - [Download](https://nodejs.org/)
+* Git - [Download](https://git-scm.com/)
 
 ## 📚 Documentation
 
+### Getting Started
+* **[Complete Setup Guide](SETUP.md)** - Step-by-step installation and configuration
+* **[Setup Verification](verify_setup.py)** - Automated environment check
+* **[Startup Helper](startup.ps1)** - One-command server startup (Windows)
+
+### Project Documentation
+* [Backend Upload & J1939 Files](backend/README_UPLOAD.md)
 * [API Endpoints Reference](API_ENDPOINT_REFERENCE.md)
 * [Quick Start Testing](QUICK_START_TESTING.md)
 * [Technical Details](TECHNICAL_DETAILS.md)
+
+### For Developers
+* Run `python verify_setup.py` to check your environment
+* Run `.\startup.ps1` (Windows) to start all servers
+* Check `.env.example` and `frontend/.env.example` for configuration options
+
+## 🆘 Troubleshooting
+
+Having issues? Check these first:
+
+1. **Module not found errors**: Run `pip install -r requirements.txt` in backend
+2. **Port already in use**: Change port in server command
+3. **CORS errors**: Restart both backend and frontend servers
+4. **Database errors**: Run `python manage.py migrate`
+
+See **[SETUP.md](SETUP.md#-troubleshooting)** for more troubleshooting tips.
 
 ## 🤝 Contributing
 
