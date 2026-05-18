@@ -127,7 +127,7 @@ export default function Header({ language, setLanguage, isMenuOpen, setIsMenuOpe
           {/* Logo */}
           <Link href="/">
   <img
-    src="/downloads/swisys.logo.png"
+    src="/Downloads/swisys.logo.png"
     alt="SwiSys Logo"
     className="h-10 w-auto mr-3 cursor-pointer"
   />
