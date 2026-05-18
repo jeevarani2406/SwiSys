@@ -11,13 +11,8 @@ import environ
 # 🔧 CRITICAL PATCH: FORCE DJANGO TO ACCEPT MYSQL 5.7
 # ==============================================================
 # This bypasses the "MySQL 8 or later is required" error
-# Only apply if MySQLdb is available
-try:
-    import django.db.backends.mysql.base
-    django.db.backends.mysql.base.DatabaseWrapper.check_database_version_supported = lambda self: None
-except Exception:
-    # MySQLdb not installed or other error, using SQLite or other backend
-    pass
+import django.db.backends.mysql.base
+django.db.backends.mysql.base.DatabaseWrapper.check_database_version_supported = lambda self: None
 # ==============================================================
 
 # -------------------------
