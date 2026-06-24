@@ -41,9 +41,9 @@ export default function Footer({ language }) {
                     <div className="md:col-span-2">
                         <div className="flex items-center mb-4">
                             <img
-                                src="https://swisystem.com/wp-content/uploads/2020/05/swisys-logo-2.png"
+                                src="SWISYS-TRANSPARENT-WHITE-TEXT.png"
                                 alt="SwiSys Logo"
-                                className="h-8 w-auto mr-3"
+                                className="h-8 w-auto mr-4"
                             />
                         </div>
                         <p className="text-gray-300 text-sm leading-relaxed mb-4">

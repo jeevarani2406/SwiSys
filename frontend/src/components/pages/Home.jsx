@@ -7,17 +7,7 @@ import Swal from 'sweetalert2'
 
 export default function Home({ language }) {
     // Video files array (titles, descriptions, icons removed)
-    const videos = [
-        {
-            link: 'https://swisystem.com/wp-content/uploads/2020/06/Nissan-Car-Door-lock-and-unlock-using-SWISYS-OBDII-Bridge..mp4'
-        },
-        {
-            link: 'https://swisystem.com/wp-content/uploads/2020/06/OBDII-2.mp4'
-        },
-        {
-            link: 'https://swisystem.com/wp-content/uploads/2020/09/SWISYS-OBDII-Bridge-with-GARMIN-VIRB-360-1.mp4,'
-        }
-    ];
+    
 
     // Contact form state
     const [formData, setFormData] = useState({ name: '', email: '', Phonenumber: '', message: '' });
@@ -306,73 +296,7 @@ export default function Home({ language }) {
                 </div>
             </section>
 
-            {/* Product Demo Videos */}
-            <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden">
-                <div
-                    className="absolute inset-0 opacity-10"
-                    style={{
-                        backgroundImage:
-                            "url(https://i.pinimg.com/originals/d7/79/3d/d7793d5c497abcab0da1f34fc56c943d.jpg)",
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                    }}
-                />
-
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                        {language === "en" ? "Product Demo Videos" : "產品示範影片"}
-                    </h2>
-
-                    <p className="text-lg text-gray-600 mb-12">
-                        {language === "en"
-                            ? "See our OBDII Bridge in action with real vehicle operations."
-                            : "觀看我們的 OBDII Bridge 在實際車輛操作中的表現。"}
-                    </p>
-
-                    {/* Simplified video cards */}
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {videos.map((video, index) => {
-                            const raw = (video.src ?? video.link ?? "");
-                            const videoSrc = raw.replace(/,+$/,"");
-                            return (
-                                <div
-                                    key={index}
-                                    className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden"
-                                >
-                                    <div className="relative aspect-video bg-black">
-                                        {videoSrc ? (
-                                            <video
-                                                className="w-full h-full object-cover"
-                                                controls
-                                            >
-                                                <source src={videoSrc} type="video/mp4" />
-                                                {language === "en"
-                                                    ? "Your browser does not support the video tag."
-                                                    : "您的瀏覽器不支持視頻播放。"}
-                                            </video>
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-white">
-                                                {language === "en"
-                                                    ? "Video source missing"
-                                                    : "影片來源遺失"}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    <div className="text-center mt-12">
-                        <p className="text-gray-600 text-sm flex items-center justify-center gap-2">
-                            <Play className="h-4 w-4" />
-                            {language === "en"
-                                ? "Click on videos to play and see our technology in action"
-                                : "點擊視頻播放，觀看我們的技術實際應用"}
-                        </p>
-                    </div>
-                </div>
-            </section>
+            
 
             {/* Simple Get in Touch Section */}
             <section className="relative py-20 overflow-hidden">
