@@ -326,11 +326,17 @@ specifications: {
             {productContent.title}
           </h1>
           <div className="text-blue-200">
-            <span className="capitalize">{category.replace(/-/g, ' ')}</span>
-            <span className="mx-2">/</span>
-            <span className="capitalize">
-              {subcategory.replace(/-/g, ' ')}
-            </span>
+            {category === 'can-bus-ecu' && subcategory === 'can-evb' ? (
+              <span>CAN BUS ECU</span>
+            ) : (
+              <>
+                <span className="capitalize">{category.replace(/-/g, ' ')}</span>
+                <span className="mx-2">/</span>
+                <span className="capitalize">
+                  {subcategory.replace(/-/g, ' ')}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </section>
